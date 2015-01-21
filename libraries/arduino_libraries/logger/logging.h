@@ -158,6 +158,7 @@ public:
 
    void Info(const char msg[], ...);
    void Info( const __FlashStringHelper * msg, ...);
+   void InfoLn(const char msg[], ...);
    void InfoLn( const __FlashStringHelper * msg, ...);
    void InfoStr(const __FlashStringHelper * msg);
    void InfoStrLn(const __FlashStringHelper * msg);

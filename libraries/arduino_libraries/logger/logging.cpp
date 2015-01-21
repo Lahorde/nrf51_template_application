@@ -145,6 +145,16 @@ void Logging::Info(const __FlashStringHelper * msg, ...){
 	}
 }
 
+void Logging::InfoLn(const char msg[], ...){
+	if (LOG_LEVEL_INFOS <= _u8_logLevel) {
+		va_list args;
+		va_start(args, msg);
+		print(msg,args);
+		_p_output_stream->print(BL);
+		_p_output_stream->flush();
+	}
+}
+
 void Logging::InfoLn(const __FlashStringHelper * msg, ...){
 	if (LOG_LEVEL_INFOS <= _u8_logLevel) {
 		va_list args;

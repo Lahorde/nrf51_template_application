@@ -1,0 +1,5 @@
+power on
+r
+loadbin @BIN@ @START_ADDRESS@
+r
+qc

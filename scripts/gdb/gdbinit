@@ -1,0 +1,11 @@
+# http://sourceware.org/gdb/wiki/FAQ: to disable the
+# "---Type <return> to continue, or q <return> to quit---"
+# in batch mode:
+set pagination off
+echo running project .gdbinit\n
+#echo make flash\n
+#     shell make flash &
+echo JLinkGDBServer -Device nrf51822 -If SWD -speed 10000\n
+     shell JLinkGDBServer -Device nrf51822 -If SWD -speed 10000 &
+
+

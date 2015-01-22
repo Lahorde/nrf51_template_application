@@ -6,7 +6,7 @@
  * @brief startup file for nRF51. Comes from nordic SDK /nrf51822/Source/templates/
  * Added post_init weak function in reset handler
  * 
- * Project : wimu
+ * Project : nrf51_template_application
  * Contact:  Rémi Pincent - remi.pincent@inria.fr
  * 
  * Revision History:

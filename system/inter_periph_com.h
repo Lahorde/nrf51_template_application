@@ -1,29 +1,32 @@
 /******************************************************************************
- * @file    template_application.cpp
+ * @file    inter_periph_com.h 
  * @author  Rémi Pincent - INRIA
- * @date    14 janv. 2015   
+ * @date    22 janv. 2015   
  *
  * @brief TODO_one_line_description_of_file
  * 
- * Project : wimu
+ * Project : nrf51_template_application
  * Contact:  Rémi Pincent - remi.pincent@inria.fr
  * 
  * Revision History:
  * TODO_revision history
  *****************************************************************************/
+#ifndef SYSTEM_INTER_PERIPH_COM_H_
+#define SYSTEM_INTER_PERIPH_COM_H_
 
 /**************************************************************************
  * Include Files
  **************************************************************************/
-#include "Arduino.h"
-#include "ble_transceiver.h"
-#include "logger.h"
-#include "nrf51_status.h"
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-const char* as8_bleName = "template_app";
+
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
@@ -31,35 +34,30 @@ const char* as8_bleName = "template_app";
 /**************************************************************************
  * Variables
  **************************************************************************/
-static BLETransceiver                   bleTransceiver(as8_bleName);
-
+extern uint16_t PPI_Channels_Occupied[4][2]; 	//Save PPI channel number, each GPIOTE channel takes up two PPI channels
+extern uint8_t GPIOTE_Channels_Occupied[4]; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
+extern uint8_t GPIOTE_Channel_for_Analog[3];				  				//Save the Channel number used by PWM,
+extern uint8_t Timer1_Occupied_Pin[3]; 				      				//the pin which used for analogWrite
 /**************************************************************************
  * Macros
  **************************************************************************/
 
 /**************************************************************************
- * Local Functions
- **************************************************************************/
-
-/**************************************************************************
  * Global Functions
  **************************************************************************/
-void application_setup(void){
-	Serial.begin(9600);
-	LOG_INIT(LOG_LEVEL);
+uint8_t GPIOTE_Channel_Find();
 
-	LOG_INFO_LN("Starting application ...");
+void GPIOTE_Channel_Set(uint8_t channel);
 
-	pinMode(4, INPUT);
+void GPIOTE_Channel_Clean(uint8_t channel);
 
-	bleTransceiver.init();
-	bleTransceiver.advertise();
+int find_free_PPI_channel(int exclude_channel);
+
+void PPI_Off_FROM_GPIO(uint32_t pin);
+
+#ifdef __cplusplus
 }
+#endif
 
-/**
- * Called in application context
- */
-void application_loop(void){
-    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
-    delay(500);
-}
+
+#endif /* SYSTEM_INTER_PERIPH_COM_H_ */

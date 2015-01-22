@@ -33,8 +33,6 @@ const uint32_t BLETransceiver::FIRST_CONN_PARAMS_UPDATE_DELAY   = APP_TIMER_TICK
 const uint32_t BLETransceiver::NEXT_CONN_PARAMS_UPDATE_DELAY    = APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER);
 const uint8_t BLETransceiver::MAX_CONN_PARAMS_UPDATE_COUNT      = 3;
 
-const char* BLETransceiver::DEVICE_NAME                         = "nrf_51_template";
-
 const uint16_t BLETransceiver::MIN_CONN_INTERVAL                = MSEC_TO_UNITS(100, UNIT_1_25_MS);
 const uint16_t BLETransceiver::MAX_CONN_INTERVAL                = MSEC_TO_UNITS(200, UNIT_1_25_MS);
 const uint16_t BLETransceiver::SLAVE_LATENCY                    = 0;
@@ -52,7 +50,7 @@ uint16_t  BLETransceiver::m_conn_handle                          = BLE_CONN_HAND
 ble_nus_t BLETransceiver::_m_nus;
 ble_gap_sec_params_t             BLETransceiver::m_sec_params;
 
-BLETransceiver::BLETransceiver()
+BLETransceiver::BLETransceiver(const char* arg_as8_deviceName): _as8_deviceName(arg_as8_deviceName)
 {
 	// TODO Auto-generated constructor stub
 
@@ -206,8 +204,8 @@ void BLETransceiver::gapParamsInit(void)
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
     err_code = sd_ble_gap_device_name_set(&sec_mode,
-                                          (const uint8_t *)DEVICE_NAME,
-                                          strlen(DEVICE_NAME));
+                                          (const uint8_t *)_as8_deviceName,
+                                          strlen(_as8_deviceName));
     APP_ERROR_CHECK(err_code);
 
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));

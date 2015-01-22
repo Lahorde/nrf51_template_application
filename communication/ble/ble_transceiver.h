@@ -41,8 +41,6 @@ private :
 	/**< Time between each call to sd_ble_gap_conn_param_update after the first call (5 seconds). */
 	static const uint32_t NEXT_CONN_PARAMS_UPDATE_DELAY;
 	static const uint8_t MAX_CONN_PARAMS_UPDATE_COUNT;
-	 /**< Name of device. Will be included in the advertising data. */
-	static const char* DEVICE_NAME;
 
 	/**< Minimum acceptable connection interval (0.5 seconds). */
 	static const uint16_t MIN_CONN_INTERVAL;
@@ -75,8 +73,11 @@ private :
     static ble_gap_sec_params_t             m_sec_params;
     /**< Handle of the current connection. */
     static uint16_t  m_conn_handle;
+
+	 /**< Name of device. Will be included in the advertising data. */
+	const char* _as8_deviceName;
 public:
-  BLETransceiver();
+  BLETransceiver(const char* arg_as8_deviceName);
   virtual ~BLETransceiver();
 
   /**

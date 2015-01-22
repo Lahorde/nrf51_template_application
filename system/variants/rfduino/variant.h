@@ -42,37 +42,87 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _LIBRFDUINO_
-#define _LIBRFDUINO_
-
 /*
- * Core and peripherals registers definitions
- */
-//#include "startup_nrf51822.h"
-#include "system_nrf51.h"
-#include "nrf51.h"
-#include "nrf51_bitfields.h"
+ * Here should go some sort of liscense maybe? This file is a modified
+ * arduino source file.  It defines the board variant being used
+*/
 
-/* Define attribute */
-#if defined (  __GNUC__  ) /* GCC CS3 */
-    #define WEAK __attribute__ ((weak))
+#ifndef _VARIANT_RFDUINO_
+#define _VARIANT_RFDUINO_
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-/* Define NO_INIT attribute */
-#if defined (  __GNUC__  )
-    #define NO_INIT
-#endif
+/*----------------------------------------------------------------------------
+ *        Headers
+ *----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------
+ *        Definitions
+ *----------------------------------------------------------------------------*/
+
+#define RFDUINO
+
+/** Name of the board */
+#define VARIANT_NAME        "RFduino"
+
+/** Master clock frequency  (used in TWI and DAC) */
+#define VARIANT_MCK         16000000UL
+
+/*----------------------------------------------------------------------------
+ *        Pins
+ *----------------------------------------------------------------------------*/
+
+// Number of pins
+#define PINS_COUNT           (7u)
+#define INVALID_PIN          (PINS_COUNT)
 
 /*
- * Peripherals
- *
- * Here we include all the header files of the peripheral devices.
- * The header files should be in the "include" folder and the
- * source files should be in the "source" folder.
- *
- * ex. #include "include/peripheral_device.h"
+ * SPI Interfaces
  */
+#define SPI_INTERFACES_COUNT 2
 
-#include "nrf_gpiote.h"
+#define SPI_INTERFACE        NRF_SPI0
+#define PIN_SPI_SS           (6u)
+#define PIN_SPI_MOSI         (5u)
+#define PIN_SPI_MISO         (3u)
+#define PIN_SPI_SCK          (4u)
 
-#endif /* _LIBRFDUINO_ */
+#define SS    PIN_SPI_SS
+#define MOSI  PIN_SPI_MOSI
+#define MISO  PIN_SPI_MISO
+#define SCK   PIN_SPI_SCK
+
+/*
+ * Wire Interfaces
+ */
+#define PIN_WIRE_SDA         (6u)
+#define PIN_WIRE_SCL         (5u)
+#define WIRE_INTERFACE       NRF_TWI1
+
+/*
+ * Analog pins
+ */
+#define ADC_RESOLUTION        10
+
+/*
+ * UART/USART Interfaces
+ */
+#define UART_DEFAULT_RX_PIN		0
+#define UART_DEFAULT_TX_PIN		1
+
+/**
+ * Convert given PIN to be compatible with Arduino pins
+ * @param pin
+ * @return
+ */
+uint32_t Pin_nRF51822_to_Arduino(uint32_t pin);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _VARIANT_RFDUINO_ */

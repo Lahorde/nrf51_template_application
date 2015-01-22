@@ -1,11 +1,11 @@
 /******************************************************************************
- * @file    nvic_irq.c 
+ * @file    interrupt_controller.c
  * @author  Rémi Pincent - INRIA
  * @date    31 oct. 2014   
  *
- * @brief NVIC vectors
+ * @brief Interrupt controller
  * 
- * Project : wimu
+ * Project : nrf51_template_application
  * Contact:  Rémi Pincent - remi.pincent@inria.fr
  * 
  * Revision History:
@@ -15,12 +15,16 @@
 /**************************************************************************
  * Include Files
  **************************************************************************/
-#include "nvic_irq.h"
+#include <stddef.h>
+#include "interrupt_controller.h"
 #include "nrf_soc.h"
 
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
+//First 15 exception entries that occurs in Cortex Core
+#define NB_CORTEX_CORE_EXCEPTIONS      16
+#define NB_NRF51_PERIPHERAL_EXCEPTIONS 32
 
 /**************************************************************************
  * Type Definitions
@@ -43,7 +47,6 @@ extern void Dynamic_Handler(void);
 /**************************************************************************
  * Variables
  **************************************************************************/
-extern int BLE_used;
 
 /* exception number mirrors vector table */
 dynamic_handler_t exception_handlers[NB_NRF51_PERIPHERAL_EXCEPTIONS + NB_CORTEX_CORE_EXCEPTIONS] =
@@ -67,7 +70,7 @@ dynamic_handler_t exception_handlers[NB_NRF51_PERIPHERAL_EXCEPTIONS + NB_CORTEX_
 };
 
 /* interrupt number: negative for non-configuable interrupts, positive for configurable interrupts */
-extern dynamic_handler_t *dynamic_handlers = &exception_handlers[NB_CORTEX_CORE_EXCEPTIONS];
+dynamic_handler_t *dynamic_handlers = &exception_handlers[NB_CORTEX_CORE_EXCEPTIONS];
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -76,32 +79,14 @@ extern dynamic_handler_t *dynamic_handlers = &exception_handlers[NB_CORTEX_CORE_
  * Global Functions
  **************************************************************************/
 
-void nvic_enable_irq(IRQn_Type irq_num)
+void linkInterrupt( uint8_t IRQn, dynamic_handler_t handler)
 {
-    if (BLE_used == 0) {
-        NVIC_EnableIRQ(irq_num);
-    } else if (BLE_used == 1) {
-        sd_nvic_EnableIRQ(irq_num);
-    }
-    nvic_set_priority(irq_num, 3);
+	dynamic_handlers[IRQn] = handler;
 }
 
-void nvic_disable_irq(IRQn_Type irq_num)
+void unlinkInterrupt( uint8_t IRQn )
 {
-    if (BLE_used == 0) {
-        NVIC_DisableIRQ(irq_num);
-    } else if (BLE_used == 1) {
-        sd_nvic_DisableIRQ(irq_num);
-    }
-}
-
-void nvic_set_priority(IRQn_Type irq_num, uint32_t priority)
-{
-    if (BLE_used == 0) {
-        NVIC_SetPriority(irq_num, priority);
-    } else if (BLE_used == 1) {
-        sd_nvic_SetPriority(irq_num, priority);
-    }
+	dynamic_handlers[IRQn] = NULL;
 }
 
 void Default_Dynamic_Handler(void)

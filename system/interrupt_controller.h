@@ -1,30 +1,31 @@
 /******************************************************************************
- * @file    nvic_handler.h 
+ * @file    interrupt_controller.h
  * @author  Rémi Pincent - INRIA
  * @date    31 oct. 2014   
  *
  * @brief TODO_one_line_description_of_file
  * 
- * Project : wimu
+ * Project : nrf51_template_application
  * Contact:  Rémi Pincent - remi.pincent@inria.fr
  * 
  * Revision History:
  * TODO_revision history
  *****************************************************************************/
-#ifndef NVIC_IRQ_H_
-#define NVIC_IRQ_H_
+#ifndef INTERRUPT_CONTROLLER_H_
+#define INTERRUPT_CONTROLLER_H_
 
 /**************************************************************************
  * Include Files
  **************************************************************************/
 #include "nrf51.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-//First 15 exception entries that occurs in Cortex Core
-#define NB_CORTEX_CORE_EXCEPTIONS      16
-#define NB_NRF51_PERIPHERAL_EXCEPTIONS 32
+
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
@@ -35,9 +36,11 @@ typedef dynamic_handler_t pin_callback_t;
 /**************************************************************************
  * Global Functions Declarations
  **************************************************************************/
-void nvic_enable_irq(IRQn_Type irq_num);
-void nvic_disable_irq(IRQn_Type irq_num);
-void nvic_set_priority(IRQn_Type irq_num, uint32_t priority);
+void linkInterrupt( uint8_t IRQn, dynamic_handler_t handler);
+void unlinkInterrupt( uint8_t IRQn );
 
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* NVIC_IRQ_H_ */
+#endif /* INTERRUPT_CONTROLLER_H_ */

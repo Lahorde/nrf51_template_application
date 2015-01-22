@@ -51,33 +51,39 @@
 extern uint32_t pulseIn( uint32_t pin, uint32_t state, uint32_t timeout )
 
 {
-	uint32_t width = 0; // keep initialization out of time critical area
+	uint32_t width = 0, nrf_pin; 
+	
+	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	if(nrf_pin < 31)
+	{
+		uint32_t numloops = 0;
+		uint32_t maxloops = microsecondsToClockCycles(timeout) / 2;
 
-	// convert the timeout from microseconds to a number of times through
-	// the initial loop; it takes 2 clock cycles per iteration.
-	uint32_t numloops = 0;
-	uint32_t maxloops = microsecondsToClockCycles(timeout) / 2;
+		// wait for any previous pulse to end
+		while (((NRF_GPIO->IN >> nrf_pin) & 1UL) == state)
+			if (numloops++ == maxloops)
+				return 0;
 
-	// wait for any previous pulse to end
-  while (((NRF_GPIO->IN >> pin) & 1UL) == state)
-		if (numloops++ == maxloops)
-			return 0;
+		// wait for the pulse to start
+		while (((NRF_GPIO->IN >> nrf_pin) & 1UL) != state)
+			if (numloops++ == maxloops)
+				return 0;
 
-	// wait for the pulse to start
-  while (((NRF_GPIO->IN >> pin) & 1UL) != state)
-		if (numloops++ == maxloops)
-			return 0;
-
-	// wait for the pulse to stop
-  while (((NRF_GPIO->IN >> pin) & 1UL) == state) {
-		if (numloops++ == maxloops)
-			return 0;
-		width++;
+		// wait for the pulse to stop
+		while (((NRF_GPIO->IN >> nrf_pin) & 1UL) == state) 
+		{
+			if (numloops++ == maxloops)
+				return 0;
+			width++;
+		}
+		// convert the reading to microseconds. The loop has been determined
+		// to be 17 clock cycles long and have about 16 clocks between the edge
+		// and the start of the loop. There will be some error introduced by
+		// the interrupt handlers.
+		return clockCyclesToMicroseconds(width * 17 + 16);
 	}
-
-	// convert the reading to microseconds. The loop has been determined
-	// to be 17 clock cycles long and have about 16 clocks between the edge
-	// and the start of the loop. There will be some error introduced by
-	// the interrupt handlers.
-	return clockCyclesToMicroseconds(width * 17 + 16);
+	else 
+	{
+		return 0;
+	}
 }

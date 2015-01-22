@@ -37,6 +37,4 @@ const bool USE_EVENT_SCHEDULER  = true;
  *    Application wireless comm     *
  ************************************/
 
-
-
 #endif /* APPLICATION_APPLICATION_CONFIGURATION_H_ */

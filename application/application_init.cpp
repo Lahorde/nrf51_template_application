@@ -40,9 +40,6 @@ extern "C" {
 
 }
 
-// Arduino support
-#include "wiring.h"
-
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
@@ -53,6 +50,7 @@ extern "C" {
 #define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
+#define RTC1_CYCLE_TIME                      APP_TIMER_TICKS(120000, 0)
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
@@ -60,6 +58,7 @@ extern "C" {
 /**************************************************************************
  * Variables
  **************************************************************************/
+static app_timer_id_t                        m_rtc_start_timer_id;
 
 /**************************************************************************
  * Macros
@@ -101,15 +100,9 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name);
  */
 static void timers_init(void);
 
-static void timer_timeout_handler(void * p_context);
-
 /**@brief Function for the Event Scheduler initialization.
  */
 static void scheduler_init(void);
-
-/**@brief Function for initializing the GPIOTE handler module.
- */
-static void gpiote_init(void);
 
 /** Start LFCLK in order to use RTC */
 static void lfclk_init(void);
@@ -118,15 +111,12 @@ static void lfclk_init(void);
 */
 static void timers_start(void);
 
-/**@brief Function for the Power manager.
- */
-static void power_manage(void);
+static void m_rtc_start_handle(void * p_context);
 
 /**************************************************************************
  * Global Functions
  **************************************************************************/
 // Arduino support
-//RP - 15/01/2015 - missed something, using setup(), loop() leads to undefined ref...
 extern void application_setup(void);
 extern void application_loop(void);
 
@@ -137,22 +127,15 @@ int main(void)
 {
 	lfclk_init();
     timers_init();
-    //RP - 15/01/2015 - TODO - activate GPIOTE?
-    //gpiote_init();
     scheduler_init();
-
-    //Arduino initialization, LFCLK and timers must have been initialized before
-    init();
-    application_setup();
-
-    // Start execution
     timers_start();
+    //Arduino initialization, LFCLK and timers must have been initialized before
+    application_setup();
 
     // Enter main loop
     for (;;)
     {
         app_sched_execute();
-        //power_manage();
 
         //application loop
         application_loop();
@@ -175,7 +158,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     ble_debug_assert_handler(error_code, line_num, p_file_name);
 
     // On assert, the system can only recover with a reset.
-    //NVIC_SystemReset();
+    NVIC_SystemReset();
 }
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
@@ -187,10 +170,6 @@ static void timers_init(void)
 {
     // Initialize timer module, making it use the scheduler
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, USE_EVENT_SCHEDULER);
-}
-
-static void timer_timeout_handler(void * p_context) {
-    return;
 }
 
 static void scheduler_init(void)
@@ -210,23 +189,22 @@ static void lfclk_init(void)
     NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
 }
 
-static void gpiote_init(void)
+static void m_rtc_start_handle(void * p_context)
 {
-    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+	//UNUSED_PARAMETER(p_context);
 }
 
 static void timers_start(void)
 {
-}
+	uint32_t err_code;
 
-static void power_manage(void)
-{
-    uint32_t err_code = sd_app_evt_wait();
+	//RP - 22/01/2015 - Application timer started in application_init.cpp
+
+	err_code = app_timer_create(&m_rtc_start_timer_id,
+					 APP_TIMER_MODE_REPEATED,
+					 m_rtc_start_handle);
+	APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_start(m_rtc_start_timer_id, RTC1_CYCLE_TIME, NULL);
     APP_ERROR_CHECK(err_code);
-}
-
-extern "C" void __cxa_pure_virtual()
-{
-	//pure virtual function called
-  while (1);
 }

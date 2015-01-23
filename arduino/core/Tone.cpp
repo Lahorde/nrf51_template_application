@@ -24,7 +24,7 @@ void tone(uint32_t pin, uint16_t freq, uint32_t duration)
 	uint8_t channel, softdevice_enabled;
 	
 	channel = GPIOTE_Channel_Find();
-	if(channel == 255)
+	if(channel == UNAVAILABLE_GPIOTE_CHANNEL)
 	{
 		return;
 	}

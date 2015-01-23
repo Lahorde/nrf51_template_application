@@ -27,7 +27,9 @@
 #include "interrupt.h"
 #include "nrf_soc.h"
 #include "nrf_sdm.h"
+extern "C"{
 #include "app_error.h"
+}
 #include "app_util_platform.h"
 #include "nrf_gpiote.h"
 #include "inter_periph_com.h"
@@ -67,27 +69,26 @@ void delay_ex_interrupter(uint32_t us)
 name :
 function : 
 **********************************************************************/
-void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode)
+void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger pinTrigger)
 {
 	uint32_t nrf_pin, err_code = NRF_SUCCESS;
 	uint8_t channel;
 	
 	channel = GPIOTE_Channel_Find();
-	if(channel == 255)
+	if(channel == UNAVAILABLE_GPIOTE_CHANNEL)
 	{
 		return;
 	}
 	
 	nrf_pin = Pin_nRF51822_to_Arduino(pin);
-	if( nrf_pin < 31 &&  (mode ==RISING || mode == FALLING) && channel<4 )
+	if( nrf_pin < 31 &&  (pinTrigger ==RISING || pinTrigger == FALLING) && channel<4 )
 	{	
 		GPIOTE_Channel_Set(channel);
-		
 		if(channel == 0)
 		{	
 			pin_interrupterCB[0] = event_handler;
 			pin_for_inter[0] = nrf_pin;
-			if( mode == RISING )
+			if( pinTrigger == RISING )
 			{	
 				inter_mode[0] = 0x01;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -101,7 +102,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
 				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN0_Set << GPIOTE_INTENSET_IN0_Pos; 
 			}
-			else if( mode == FALLING )
+			else if( pinTrigger == FALLING )
 			{	
 				inter_mode[0] = 0x02;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -120,7 +121,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 		{
 			pin_interrupterCB[1] = event_handler;
 			pin_for_inter[1] = nrf_pin;
-			if( mode == RISING )
+			if( pinTrigger == RISING )
 			{
 				inter_mode[1] = 0x01;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -135,7 +136,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 											
 				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN1_Set << GPIOTE_INTENSET_IN1_Pos;
 			}
-			else if( mode == FALLING )
+			else if( pinTrigger == FALLING )
 			{
 				inter_mode[1] = 0x02;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -154,7 +155,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 		{
 			pin_interrupterCB[2] = event_handler;
 			pin_for_inter[2] = nrf_pin;
-			if( mode == RISING )
+			if( pinTrigger == RISING )
 			{
 				inter_mode[2] = 0x01;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -169,7 +170,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 											
 				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN2_Set << GPIOTE_INTENSET_IN2_Pos;
 			}
-			else if( mode == FALLING )
+			else if( pinTrigger == FALLING )
 			{
 				inter_mode[2] = 0x02;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -188,7 +189,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 		{
 			pin_interrupterCB[3] = event_handler;
 			pin_for_inter[3] = nrf_pin;
-			if( mode == RISING )
+			if( pinTrigger == RISING )
 			{
 				inter_mode[3] = 0x01;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
@@ -203,7 +204,7 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, uint32_t mode
 											
 				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN3_Set << GPIOTE_INTENSET_IN3_Pos;
 			}
-			else if( mode == FALLING )
+			else if( pinTrigger == FALLING )
 			{
 				inter_mode[3] = 0x02;
 				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)

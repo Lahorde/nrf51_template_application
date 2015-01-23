@@ -344,7 +344,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 				
 				//fine a free gpiote channel
 				gpiote_channel = GPIOTE_Channel_Find();
-				if( gpiote_channel == 255 )
+				if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 				{
 					return;
 				}
@@ -394,7 +394,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//fine a free gpiote channel and configure the channel
 					gpiote_channel = GPIOTE_Channel_Find();
-					if( gpiote_channel == 255 )
+					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
@@ -417,7 +417,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
 					gpiote_channel = GPIOTE_Channel_Find();
-					if( gpiote_channel == 255 )
+					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
@@ -441,7 +441,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
 					gpiote_channel = GPIOTE_Channel_Find();
-					if( gpiote_channel == 255 )
+					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}

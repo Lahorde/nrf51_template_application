@@ -7,21 +7,6 @@
 extern "C"{
 #endif // __cplusplus
 
-#define INPUT 			0x0
-#define OUTPUT 			0x1
-#define INPUT_PULLUP 	0x2
-
-#define INPUT_NOPULL 	0x3
-#define INPUT_PULLDOWN 	0x4
-#define OUTPUT_S0S1 	0x5
-#define OUTPUT_H0S1 	0x6
-#define OUTPUT_S0H1 	0x7
-#define OUTPUT_H0H1 	0x8
-#define OUTPUT_D0S1 	0x9
-#define OUTPUT_D0H1 	0xA
-#define OUTPUT_S0D1 	0xB
-#define OUTPUT_H0D1 	0xC
-
 #define PI 				3.1415926535897932384626433832795
 #define HALF_PI 		1.5707963267948966192313216916398
 #define TWO_PI 			6.283185307179586476925286766559
@@ -36,11 +21,33 @@ enum BitOrder {
 	MSBFIRST = 1
 };
 
-#define LOW 			0
-#define HIGH 			1
-#define CHANGE 			2
-#define FALLING 		3
-#define RISING 			4
+typedef enum{
+	INPUT 			= 0x0,
+	OUTPUT 			= 0x1,
+	INPUT_PULLUP 	= 0x2,
+	INPUT_NOPULL 	= 0x3,
+	INPUT_PULLDOWN 	= 0x4,
+	OUTPUT_S0S1 	= 0x5,
+	OUTPUT_H0S1 	= 0x6,
+	OUTPUT_S0H1 	= 0x7,
+	OUTPUT_H0H1 	= 0x8,
+	OUTPUT_D0S1 	= 0x9,
+	OUTPUT_D0H1 	= 0xA,
+	OUTPUT_S0D1 	= 0xB,
+	OUTPUT_H0D1 	= 0xC
+}EPinMode;
+
+typedef enum{
+	LOW             = 0,
+	HIGH            = 1,
+}EPinState;
+
+typedef enum{
+	CHANGE          = 2,
+	FALLING         = 3,
+	RISING          = 4
+}EPinTrigger;
+
 
 // ADC reference selection
 

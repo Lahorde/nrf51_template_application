@@ -16,14 +16,16 @@
  * Include Files
  **************************************************************************/
 #include "inter_periph_com.h"
+#include "interrupt_controller.h"
 #include "app_error.h"
 #include "nrf51.h"
 #include "nrf_sdm.h"
+#include "nrf_gpiote.h"
 
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-
+#define UNAVAILABLE_GPIOTE_CHANNEL  (0xFFu)
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
@@ -32,8 +34,8 @@
  * Variables
  **************************************************************************/
 uint16_t PPI_Channels_Occupied[4][2] = {{255, 255}, {255, 255}, {255, 255}, {255, 255}}; 	//Save PPI channel number, each GPIOTE channel takes up two PPI channels
-uint8_t GPIOTE_Channels_Occupied[4]  = {255,255,255,255}; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
-uint8_t GPIOTE_Channel_for_Analog[3] = {255, 255, 255};				  				//Save the Channel number used by PWM,
+uint8_t GPIOTE_Channels_Occupied[4]  = {UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL}; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
+uint8_t GPIOTE_Channel_for_Analog[3] = {UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL};				  				//Save the Channel number used by PWM,
 uint8_t Timer1_Occupied_Pin[3] = {255, 255, 255}; 				      				//the pin which used for analogWrite
 
 /**************************************************************************
@@ -58,13 +60,13 @@ uint8_t GPIOTE_Channel_Find()
 
 	for(_index=0; _index<4; _index++)
 	{
-		if( GPIOTE_Channels_Occupied[_index] == 255)
+		if( GPIOTE_Channels_Occupied[_index] == UNAVAILABLE_GPIOTE_CHANNEL)
 		{
 			return _index;
 		}
 	}
 
-	return 255;
+	return UNAVAILABLE_GPIOTE_CHANNEL;
 }
 /**********************************************************************
 name :
@@ -81,7 +83,7 @@ function :
 void GPIOTE_Channel_Clean(uint8_t channel)
 {
 	nrf_gpiote_unconfig(channel);
-	GPIOTE_Channels_Occupied[channel] = 255;
+	GPIOTE_Channels_Occupied[channel] = UNAVAILABLE_GPIOTE_CHANNEL;
 }
 
 /**********************************************************************

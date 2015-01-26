@@ -171,9 +171,10 @@ void detachInterrupt(uint32_t arg_u32_nrfPin )
 	
 	for(loc_u8_gpioteChannel = 0; loc_u8_gpioteChannel < MAX_NB_EXT_IT; loc_u8_gpioteChannel++)
 	{
-		if(loc_u32_pin == extIT[loc_u8_channel].u32_nrfPin)
+		if(loc_u32_pin == extIT[loc_u8_gpioteChannel].u32_nrfPin)
 		{
 			loc_u8_channel = loc_u8_gpioteChannel;
+			break;
 		}
 	}
 	if(loc_u8_channel == UNAVAILABLE_GPIOTE_CHANNEL){
@@ -188,15 +189,14 @@ void detachInterrupt(uint32_t arg_u32_nrfPin )
 	extIT[loc_u8_channel].cb = NULL;
 
 	//if all interrupt detach, disable GPIOTE_IRQn
-	for(loc_u8_gpioteChannel = 0; loc_u8_gpioteChannel < MAX_NB_EXT_IT; loc_u8_gpioteChannel++)
+	loc_u8_gpioteChannel = 0;
+	while((loc_u8_gpioteChannel < MAX_NB_EXT_IT)
+			&& (extIT[loc_u8_gpioteChannel].u32_nrfPin == INVALID_PIN))
 	{
-		if(extIT[loc_u8_channel].u32_nrfPin != INVALID_PIN)
-		{
-			break;
-		}
+		loc_u8_gpioteChannel++;
 	}
 
-	if(loc_u8_gpioteChannel > MAX_NB_EXT_IT)
+	if(loc_u8_gpioteChannel == MAX_NB_EXT_IT)
 	{
 		err_code = sd_softdevice_is_enabled(&softdevice_enabled);
 		APP_ERROR_CHECK(err_code);
@@ -285,7 +285,7 @@ static void GPIOTE_handler( void )
 		{	
 			if(extIT[loc_u8_gpioteChannel].e_trigger == RISING)
 			{
-				if((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL == 1  )
+				if(((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL) == 1  )
 				{
 					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
 					extIT[loc_u8_gpioteChannel].cb();

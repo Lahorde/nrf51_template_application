@@ -1,7 +1,7 @@
 /******************************************************************************
- * @file    inter_periph_com.h 
+ * @file    nrf51822_arduino_conversion.h 
  * @author  Rémi Pincent - INRIA
- * @date    22 janv. 2015   
+ * @date    26 janv. 2015   
  *
  * @brief TODO_one_line_description_of_file
  * 
@@ -11,22 +11,22 @@
  * Revision History:
  * TODO_revision history
  *****************************************************************************/
-#ifndef SYSTEM_INTER_PERIPH_COM_H_
-#define SYSTEM_INTER_PERIPH_COM_H_
+#ifndef SYSTEM_NRF51822_ARDUINO_CONVERSION_H_
+#define SYSTEM_NRF51822_ARDUINO_CONVERSION_H_
 
 /**************************************************************************
  * Include Files
  **************************************************************************/
-#include <stdint.h>
+#include "nrf_gpio.h"
+#include "nrf_gpiote.h"
+#include "Arduino.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-#define UNAVAILABLE_GPIOTE_CHANNEL  (0xFFu)
 
 /**************************************************************************
  * Type Definitions
@@ -35,10 +35,7 @@ extern "C" {
 /**************************************************************************
  * Variables
  **************************************************************************/
-extern uint16_t PPI_Channels_Occupied[4][2]; 	//Save PPI channel number, each GPIOTE channel takes up two PPI channels
-extern uint8_t GPIOTE_Channels_Occupied[4]; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
-extern uint8_t GPIOTE_Channel_for_Analog[3];				  				//Save the Channel number used by PWM,
-extern uint8_t Timer1_Occupied_Pin[3]; 				      				//the pin which used for analogWrite
+
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -46,19 +43,29 @@ extern uint8_t Timer1_Occupied_Pin[3]; 				      				//the pin which used for an
 /**************************************************************************
  * Global Functions
  **************************************************************************/
-uint8_t GPIOTE_Channel_Find();
 
-void GPIOTE_Channel_Set(uint8_t channel);
+/**
+ * Convert given pin mode to nRF51822 pull mode
+ * @param arg_e_pinMode
+ * @return
+ */
+nrf_gpio_pin_pull_t inputPinModeToNRF51Pull(EPinMode arg_e_pinMode);
 
-void GPIOTE_Channel_Clean(uint8_t channel);
+/**
+ * Convert given pin mode to nRF51822 drive (refer reference manual section 13.2.8)
+ * @param arg_e_pinMode
+ * @return
+ */
+uint32_t pinModeToNRF51Drive(EPinMode arg_e_pinMode);
 
-int find_free_PPI_channel(int exclude_channel);
-
-void PPI_Off_FROM_GPIO(uint32_t pin);
+/**
+ * Convert given trigger to GPIOTE polarity (refer reference manual section 14.2.1)
+ * @param arg_e_pinTrigger
+ * @return
+ */
+nrf_gpiote_polarity_t pinTriggerToNRF51GPIOTEPol(EPinTrigger arg_e_pinTrigger);
 
 #ifdef __cplusplus
 }
 #endif
-
-
-#endif /* SYSTEM_INTER_PERIPH_COM_H_ */
+#endif /* SYSTEM_NRF51822_ARDUINO_CONVERSION_H_ */

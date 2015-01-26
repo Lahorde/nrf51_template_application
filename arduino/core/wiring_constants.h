@@ -43,9 +43,10 @@ typedef enum{
 }EPinState;
 
 typedef enum{
-	CHANGE          = 2,
-	FALLING         = 3,
-	RISING          = 4
+	CHANGE                    = 2,
+	FALLING                   = 3,
+	RISING                    = 4,
+	OUT_OF_ENUM_PIN_TRIGGER
 }EPinTrigger;
 
 

@@ -93,7 +93,7 @@ uint32_t analogRead(uint32_t pin)
 	uint32_t pValue = 0;
 	uint32_t nrf_pin = 0;
 	//PIN transform to nRF51822
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	
 	if( nrf_pin > 0 && nrf_pin < 7)
 	{	
@@ -303,7 +303,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 	uint32_t nrf_pin, max_value;
 	uint8_t gpiote_channel;
 
-	nrf_pin = Pin_nRF51822_to_Arduino(ulPin);
+	nrf_pin = arduinoToVariantPin(ulPin);
 	if( nrf_pin < 31)
 	{	//if vaule 0 or >255, set LOW or HIGH
 		if(ulValue <= 0)

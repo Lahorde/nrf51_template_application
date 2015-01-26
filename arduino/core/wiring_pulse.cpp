@@ -53,7 +53,7 @@ extern uint32_t pulseIn( uint32_t pin, uint32_t state, uint32_t timeout )
 {
 	uint32_t width = 0, nrf_pin; 
 	
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	if(nrf_pin < 31)
 	{
 		uint32_t numloops = 0;

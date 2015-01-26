@@ -30,6 +30,12 @@
 #include "Arduino.h"
 #include "interrupt_controller.h"
 
+/**
+ * Before calling this method, input pin must be configured using pinMode() function
+ * @param pin
+ * @param event_handler
+ * @param pinTrigger
+ */
 extern void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger pinTrigger);
 extern void detachInterrupt(uint32_t pin );
 

@@ -12,13 +12,14 @@
  * TODO_revision history
  *****************************************************************************/
 #include "variant.h"
+#include "assert.h"
 
-uint32_t Pin_nRF51822_to_Arduino(uint32_t pin)
+uint32_t arduinoToVariantPin(uint32_t arg_u32_pin)
 {
 	/** check pin */
-	if(0 < pin < PINS_COUNT)
+	if(0 < arg_u32_pin && arg_u32_pin < PINS_COUNT)
 	{
-		return pin;
+		return arg_u32_pin;
 	}
 	else
 	{
@@ -26,4 +27,3 @@ uint32_t Pin_nRF51822_to_Arduino(uint32_t pin)
 		return INVALID_PIN;
 	}
 }
-

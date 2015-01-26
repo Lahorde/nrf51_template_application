@@ -28,7 +28,7 @@ void tone(uint32_t pin, uint16_t freq, uint32_t duration)
 	{
 		return;
 	}
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	if(nrf_pin < 31)
 	{
 		//save the pin number
@@ -122,7 +122,7 @@ void noTone(uint32_t pin)
 	uint8_t softdevice_enabled;
 	uint32_t nrf_pin, err_code = NRF_SUCCESS;
 	
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	if(nrf_pin < 31)
 	{	
 		if(nrf_pin == tone_pin )

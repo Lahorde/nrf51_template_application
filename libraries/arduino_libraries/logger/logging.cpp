@@ -274,14 +274,15 @@ void Logging::printArg(char arg_s8Char, va_list& args) {
 		_p_output_stream->print(va_arg( args, int ),DEC);
 	}
 	if( arg_s8Char == 'u') {
-		_p_output_stream->print((unsigned int) va_arg( args, int ),DEC);
+		_p_output_stream->print((unsigned ) va_arg( args, unsigned ),DEC);
 	}
 	if( arg_s8Char == 'x' ) {
-		_p_output_stream->print(va_arg( args, int ),HEX);
+		_p_output_stream->print("0x");
+		_p_output_stream->print(va_arg( args, unsigned ),HEX);
 	}
 	if( arg_s8Char == 'X' ) {
 		_p_output_stream->print("0x");
-		_p_output_stream->print(va_arg( args, int ),HEX);
+		_p_output_stream->print(va_arg( args, unsigned ),HEX);
 	}
 	if( arg_s8Char == 'b' ) {
 		_p_output_stream->print(va_arg( args, int ),BIN);

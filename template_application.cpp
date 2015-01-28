@@ -19,6 +19,8 @@
 #include "ble_transceiver.h"
 #include "logger.h"
 #include "nrf51_status.h"
+#include "assert.h"
+#include "memory_watcher.h"
 
 /**************************************************************************
  * Manifest Constants
@@ -44,22 +46,49 @@ static BLETransceiver                   bleTransceiver(as8_bleName);
 /**************************************************************************
  * Global Functions
  **************************************************************************/
+
+volatile int value = 0;
+
+void it(void){
+	value = (value+50)%250;
+	analogWrite(3, value);
+}
+#include "stdio.h"
 void application_setup(void){
 	Serial.begin(9600);
 	LOG_INIT(LOG_LEVEL);
+	LOG_INFO_LN("\nStarting application ...");
+	LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
+	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
+	LOG_INFO_LN("remaining stack = %l", MemoryWatcher::getRemainingStack());
+	MemoryWatcher::paintStackNow();
 
-	LOG_INFO_LN("Starting application ...");
+	pinMode(2, INPUT_PULLUP);
+	pinMode(3, OUTPUT);
 
-	pinMode(4, INPUT);
+	//appliquer correctif pour RISING
+	attachInterrupt(2, it, CHANGE);
 
 	bleTransceiver.init();
 	bleTransceiver.advertise();
+	extern const uint32_t FREE_MEM_PATTERN;
+	LOG_INFO_LN("stack size %x", FREE_MEM_PATTERN);
+	LOG_INFO_LN("Setup finished");
 }
 
 /**
  * Called in application context
  */
 void application_loop(void){
+	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
+	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
+	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
     LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
-    delay(500);
+    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
+    MemoryWatcher::paintStackNow();
+    byte* test = (byte*) 0x20003fd3;
+    Serial.println(*test);
+
+
+    delay(1000);
 }

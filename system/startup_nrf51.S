@@ -164,7 +164,33 @@ Reset_Handler:
     ORRS    R2, R1
     STR     R2, [R0]
 
+/*
+ * Populate stack with a given pattern to check stack overflow
+ */
+
+
+    /* pattern used to populate free RAM */
+    .globl  FREE_MEM_PATTERN
+    LDR     R0, =__StackTop
+    LDR     R1, =Stack_Size
+    LDR     R2, =FREE_MEM_PATTERN
+    LDR     R3, [R2]
+
+.FillStack:
+    SUBS    R0,#4
+    STR     R3, [R0]
+    SUBS    R1,#4
+    BNE     .FillStack
     
+    LDR     R0, =__HeapLimit
+    LDR     R1, =__HEAP_SIZE
+
+.FillHeap:
+    SUBS    R0,#4
+    STR     R3, [R0]
+    SUBS    R1,#4
+    BNE     .FillHeap
+
 /*     Loop to copy data from read only memory to RAM. The ranges
  *      of copy from/to are specified by following symbols evaluated in 
  *      linker script.
@@ -296,5 +322,6 @@ Default_Handler:
     IRQ  SWI5_IRQHandler
 
 
-
+FREE_MEM_PATTERN :
+    .4byte  0xDEADBEEF
   .end

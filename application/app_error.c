@@ -141,3 +141,8 @@ void error_handler(uint32_t arg_u32_errorCode, uint32_t arg_u32_lineNum, const c
     NVIC_SystemReset();
 }
 
+void HardFault_Handler(void)
+{
+	while(1);
+}
+

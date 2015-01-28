@@ -58,4 +58,6 @@ Softdevice flashed on target
 
 
 ### TODO 
-Add softdevice library
+Add softdevice library to build
+Use nano lib
+printf= > trop de stack occupé

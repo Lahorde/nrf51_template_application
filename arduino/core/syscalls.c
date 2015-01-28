@@ -105,10 +105,6 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
-    // declared in variant.cpp
-    // UART0_TX will not TX or lockup flushing TX if UART0 has not been started
-    //extern void UART0_TX(uint8_t dat);
-
     int i;
     for (i = 0; i < len; i++, ptr++)
 	{

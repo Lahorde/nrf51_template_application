@@ -17,7 +17,7 @@
 				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032" name="debug_rfduino" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release" postbuildStep="">
 					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032." name="/" resourcePath="">
 						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release.1334213074" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.577926076" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.size" valueType="enumerated"/>
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.577926076" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.none" valueType="enumerated"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.338951575" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" value="false" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.1781115375" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" value="false" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.373685226" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" value="true" valueType="boolean"/>
@@ -122,13 +122,14 @@
 									<listOptionValue builtIn="false" value="ARDUINO=157"/>
 									<listOptionValue builtIn="false" value="NRF51"/>
 									<listOptionValue builtIn="false" value="F_CPU=16000000"/>
-									<listOptionValue builtIn="false" value="LOG_LEVEL=LOG_LEVEL_INFOS"/>
+									<listOptionValue builtIn="false" value="LOG_LEVEL=LOG_LEVEL_VERBOSE"/>
 									<listOptionValue builtIn="false" value="BLE_STACK_SUPPORT_REQD"/>
 									<listOptionValue builtIn="false" value="DEBUG_NRF_USER"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.1267059633" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.483756852" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NRF51_SDK_PATH}/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/events}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/memory_watcher}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/event_manager}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pinout/rf_duino}&quot;"/>
@@ -270,8 +271,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="fdf|profiles|cortex_m0_release/rf_duino_system|nrf51_sdk_app_common|nrf51_startup_files|rf_duino_system/CMSIS|arduino/core/Memory.c|${NRF51_SDK_PATH}|nrf_delay|nrf51822_sdk_src|libraries/event_manager/EventManager.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="app_common/app_button.c|app_common/crc16.c|nrf_ecb|spi_slave|app_common/app_trace.c|console|sdk_soc|bootloader_dfu|app_common/hci_mem_pool.c|templates/gcc|nrf_assert|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|ble/ble_debug_assert_handler.c|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|simple_uart|twi_master|templates/arm|templates/iar|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|app_common/app_uart_fifo.c|nrf_delay" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nrf51822_sdk_src"/>
+						<entry excluding="fdf|profiles|nrf51_sdk_app_common|cortex_m0_release/rf_duino_system|nrf51_startup_files|rf_duino_system/CMSIS|arduino/core/Memory.c|nrf_delay|${NRF51_SDK_PATH}|libraries/event_manager/EventManager.cpp|nrf51822_sdk_src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app_common/crc16.c|app_common/app_button.c|nrf_ecb|spi_slave|console|app_common/app_trace.c|app_common/hci_mem_pool.c|bootloader_dfu|sdk_soc|nrf_assert|templates/gcc|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|ble/ble_debug_assert_handler.c|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|templates/arm|twi_master|simple_uart|templates/iar|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|nrf_delay|app_common/app_uart_fifo.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nrf51822_sdk_src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -31,7 +31,6 @@ extern "C" {
  **************************************************************************/
 //RP - 31/10/2014 place dynamic handler definition here instead of modifying .s file
 typedef void (*dynamic_handler_t)(void);
-typedef dynamic_handler_t pin_callback_t;
 
 /**************************************************************************
  * Global Functions Declarations

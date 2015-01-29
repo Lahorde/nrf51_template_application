@@ -22,11 +22,13 @@
 #include "assert.h"
 #include "memory_watcher.h"
 #include "EventManager.h"
+#include "events.h"
 
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
 const char* as8_bleName = "template_app";
+
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
@@ -59,7 +61,7 @@ void it(void){
 
 class Test : public EventListener{
 	void processEvent(uint8_t eventCode, int eventParam){
-		LOG_INFO_LN("event = %d", eventCode);
+		LOG_INFO_LN("event = %d - value = %l", eventCode, eventParam);
 	}
 };
 Test testEvent;
@@ -80,7 +82,7 @@ void application_setup(void){
 	pinMode(3, OUTPUT);
 
 	//appliquer correctif pour RISING
-	attachInterrupt(2, it, CHANGE);
+	//attachInterrupt(2, it, CHANGE);
 
 	bleTransceiver.init();
 	bleTransceiver.advertise();
@@ -88,8 +90,8 @@ void application_setup(void){
 	LOG_INFO_LN("stack size %x", FREE_MEM_PATTERN);
 	LOG_INFO_LN("Setup finished");
 
-	EventManager::getInstance()->addListener(3, &testEvent);
-	EventManager::getInstance()->enableListener(3, &testEvent, true);
+	EventManager::getInstance()->addListener(TEST_EVENT, &testEvent);
+	EventManager::getInstance()->enableListener(TEST_EVENT, &testEvent, true);
 }
 
 
@@ -107,5 +109,5 @@ void application_loop(void){
 
     EventManager::getInstance()->processAllEvents();
     delay(1000);
-    EventManager::getInstance()->queueEvent(3, NULL);
+    EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
 }

@@ -61,3 +61,4 @@ Softdevice flashed on target
 Add softdevice library to build
 Use nano lib
 printf= > trop de stack occupé
+new KO

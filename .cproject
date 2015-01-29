@@ -155,7 +155,7 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.2138344227" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1772352644" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1111531097" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1111531097" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.822636559" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/scripts/linker_scripts}&quot;"/>
 								</option>
@@ -270,8 +270,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="libraries/event_manager/EventManager.cpp|fdf|profiles|nrf51_sdk_app_common|cortex_m0_release/rf_duino_system|nrf51_startup_files|rf_duino_system/CMSIS|arduino/core/Memory.c|nrf_delay|${NRF51_SDK_PATH}|nrf51822_sdk_src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="templates/iar|templates/gcc|templates/arm|ble/ble_debug_assert_handler.c|app_common/crc16.c|app_common/app_button.c|nrf_ecb|spi_slave|console|app_common/app_trace.c|bootloader_dfu|sdk_soc|app_common/hci_mem_pool.c|nrf_assert|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|twi_master|simple_uart|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|nrf_delay|app_common/app_uart_fifo.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nrf51822_sdk_src"/>
+						<entry excluding="fdf|profiles|cortex_m0_release/rf_duino_system|nrf51_sdk_app_common|nrf51_startup_files|rf_duino_system/CMSIS|arduino/core/Memory.c|${NRF51_SDK_PATH}|nrf_delay|nrf51822_sdk_src|libraries/event_manager/EventManager.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app_common/app_button.c|app_common/crc16.c|nrf_ecb|spi_slave|app_common/app_trace.c|console|sdk_soc|bootloader_dfu|app_common/hci_mem_pool.c|templates/gcc|nrf_assert|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|ble/ble_debug_assert_handler.c|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|simple_uart|twi_master|templates/arm|templates/iar|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|app_common/app_uart_fifo.c|nrf_delay" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nrf51822_sdk_src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

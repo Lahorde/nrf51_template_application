@@ -43,13 +43,7 @@ extern "C" {
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
-
 #define APP_GPIOTE_MAX_USERS            1                                           /**< Maximum number of users of the GPIOTE handler. */
-
-#define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
-#define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
-
 #define RTC1_CYCLE_TIME                      APP_TIMER_TICKS(120000, 0)
 /**************************************************************************
  * Type Definitions
@@ -59,6 +53,7 @@ extern "C" {
  * Variables
  **************************************************************************/
 static app_timer_id_t                        m_rtc_start_timer_id;
+extern const uint32_t FREE_MEM_PATTERN;                                            /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 /**************************************************************************
  * Macros
@@ -73,10 +68,6 @@ static app_timer_id_t                        m_rtc_start_timer_id;
  * @details Initializes the timer module.
  */
 static void timers_init(void);
-
-/**@brief Function for the Event Scheduler initialization.
- */
-static void scheduler_init(void);
 
 /** Start LFCLK in order to use RTC */
 static void lfclk_init(void);
@@ -120,7 +111,6 @@ int main(void)
 {
 	lfclk_init();
     timers_init();
-    scheduler_init();
     timers_start();
     //Arduino initialization, LFCLK and timers must have been initialized before
     application_setup();
@@ -128,8 +118,6 @@ int main(void)
     // Enter main loop
     for (;;)
     {
-        app_sched_execute();
-
         //application loop
         application_loop();
     }
@@ -137,7 +125,7 @@ int main(void)
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
-    app_error_handler(DEAD_BEEF, line_num, p_file_name);
+    app_error_handler(FREE_MEM_PATTERN, line_num, p_file_name);
 }
 
 /**************************************************************************
@@ -148,11 +136,6 @@ static void timers_init(void)
 {
     // Initialize timer module, making it use the scheduler
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, USE_EVENT_SCHEDULER);
-}
-
-static void scheduler_init(void)
-{
-    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
 static void lfclk_init(void)

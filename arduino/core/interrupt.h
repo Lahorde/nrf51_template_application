@@ -30,13 +30,21 @@
 #include "Arduino.h"
 #include "interrupt_controller.h"
 
+typedef void (*ext_it_handler_t)(void*);
+
 /**
- * Before calling this method, input pin must be configured using pinMode() function
- * @param pin
- * @param event_handler
- * @param pinTrigger
+ * Attach interrupt on given pin for given trigger. Interrupt handler will be called with arg_p_handlerPayload
+ * @param arg_u32_pin
+ * @param arg_pf_itHandler
+ * @param arg_e_pinTrigger
+ * @param arg_p_handlerPayload
  */
-extern void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger pinTrigger);
-extern void detachInterrupt(uint32_t pin );
+void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EPinTrigger arg_e_pinTrigger, void* arg_p_handlerPayload = NULL);
+
+/**
+ * Detach all interrupts on given pin
+ * @param arg_u32_pin
+ */
+void detachInterrupt(uint32_t arg_u32_pin );
 
 #endif

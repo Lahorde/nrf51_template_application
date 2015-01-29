@@ -51,7 +51,8 @@ extern "C"{
 typedef struct{
 	uint32_t u32_nrfPin;
 	EPinTrigger e_trigger;
-	dynamic_handler_t cb;
+	ext_it_handler_t cb;
+	void* p_payload;
 }SExtInterrupt;
 
 /**************************************************************************
@@ -115,7 +116,7 @@ void delay_ex_interrupter(uint32_t us)
 }
 
 
-void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger pinTrigger)
+void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EPinTrigger arg_e_pinTrigger, void* arg_p_handlerPayload)
 {
 	uint32_t nrf_pin, err_code = NRF_SUCCESS;
 	nrf_gpiote_polarity_t loc_e_gpiotePol = NRF_GPIOTE_POLARITY_TOGGLE;
@@ -128,14 +129,15 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger p
 		return;
 	}
 	
-	nrf_pin = arduinoToVariantPin(pin);
+	nrf_pin = arduinoToVariantPin(arg_u32_pin);
 	assert(INVALID_PIN != nrf_pin);
 
-	loc_e_gpiotePol = pinTriggerToNRF51GPIOTEPol(pinTrigger);
+	loc_e_gpiotePol = pinTriggerToNRF51GPIOTEPol(arg_e_pinTrigger);
 	GPIOTE_Channel_Set(channel);
 	extIT[channel].u32_nrfPin = nrf_pin;
-	extIT[channel].e_trigger = pinTrigger;
-	extIT[channel].cb = event_handler;
+	extIT[channel].e_trigger = arg_e_pinTrigger;
+	extIT[channel].cb = arg_pf_itHandler;
+	extIT[channel].p_payload = arg_p_handlerPayload;
 	NRF_GPIOTE->CONFIG[channel] =  (loc_e_gpiotePol << GPIOTE_CONFIG_POLARITY_Pos)
 							| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)
 							| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);
@@ -159,14 +161,14 @@ void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger p
 }
 
 
-void detachInterrupt(uint32_t arg_u32_nrfPin )
+void detachInterrupt(uint32_t arg_u32_pin )
 {	
 	uint32_t loc_u32_pin, err_code = NRF_SUCCESS;
 	uint8_t loc_u8_channel = UNAVAILABLE_GPIOTE_CHANNEL;
 	uint8_t loc_u8_gpioteChannel;
 
 	//Get the GPIOTE Channel
-	loc_u32_pin = arduinoToVariantPin(arg_u32_nrfPin);
+	loc_u32_pin = arduinoToVariantPin(arg_u32_pin);
 	assert(INVALID_PIN != loc_u32_pin);
 	
 	for(loc_u8_gpioteChannel = 0; loc_u8_gpioteChannel < MAX_NB_EXT_IT; loc_u8_gpioteChannel++)
@@ -187,6 +189,7 @@ void detachInterrupt(uint32_t arg_u32_nrfPin )
 	extIT[loc_u8_channel].e_trigger = OUT_OF_ENUM_PIN_TRIGGER;
 	extIT[loc_u8_channel].u32_nrfPin = INVALID_PIN;
 	extIT[loc_u8_channel].cb = NULL;
+	extIT[loc_u8_channel].p_payload = NULL;
 
 	//if all interrupt detach, disable GPIOTE_IRQn
 	loc_u8_gpioteChannel = 0;
@@ -288,7 +291,7 @@ static void GPIOTE_handler( void )
 				if(((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL) == 1  )
 				{
 					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
-					extIT[loc_u8_gpioteChannel].cb();
+					extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 				}
 				else
 				{
@@ -301,7 +304,7 @@ static void GPIOTE_handler( void )
 				if(((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL) == 0  )
 				{
 					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
-					extIT[loc_u8_gpioteChannel].cb();
+					extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 				}
 				else
 				{
@@ -312,7 +315,7 @@ static void GPIOTE_handler( void )
 			else /** CHANGE */
 			{
 				NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
-				extIT[loc_u8_gpioteChannel].cb();
+				extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 			}
 		}
 	}

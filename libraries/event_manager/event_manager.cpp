@@ -23,6 +23,7 @@
 extern "C"{
 #include "app_scheduler.h"
 }
+#include "application_config.h"
 #include "delay.h"
 #include "app_util.h"
 #include "app_timer.h"
@@ -30,7 +31,6 @@ extern "C"{
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
-#define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
 
 /**************************************************************************
  * Type Definitions
@@ -71,7 +71,7 @@ EventManager* EventManager::getInstance()
 
 EventManager::EventManager( SafetyMode safety )
 {
-	APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, EVENTMANAGER_EVENT_QUEUE_SIZE);
+	APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHEDULER_QUEUE_SIZE);
 }
 
 bool EventManager::queueEvent( uint8_t eventCode, int eventParam, EventPriority pri )

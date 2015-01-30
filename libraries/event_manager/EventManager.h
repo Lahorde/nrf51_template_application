@@ -46,11 +46,6 @@
 #define EVENTMANAGER_LISTENER_LIST_SIZE		8
 #endif
 
-// Size of the event queue
-#ifndef EVENTMANAGER_EVENT_QUEUE_SIZE
-#define EVENTMANAGER_EVENT_QUEUE_SIZE		8
-#endif
-
 class EventManager
 {
 

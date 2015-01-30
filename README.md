@@ -55,10 +55,13 @@ Eclipse CDT with GNU ARM plugin http://sourceforge.net/projects/gnuarmeclipse/
 #### Others
 Softdevice flashed on target
 
-
+#### Application configuration
+ * Event queue
 
 ### TODO 
 Add softdevice library to build
 Use nano lib
 printf= > trop de stack occupé
 new KO
+script pour stlink
+button en subtree

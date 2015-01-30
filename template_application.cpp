@@ -23,6 +23,7 @@
 #include "memory_watcher.h"
 #include "EventManager.h"
 #include "events.h"
+#include "button.h"
 
 /**************************************************************************
  * Manifest Constants
@@ -32,12 +33,30 @@ const char* as8_bleName = "template_app";
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
+class Test : public EventListener{
+	void processEvent(uint8_t eventCode, int eventParam){
+		if(eventCode == TEST_EVENT)
+			LOG_INFO_LN("event = %d - value = %l", eventCode, eventParam);
+		else
+			LOG_INFO_LN("event = %d" , eventCode);
+	}
+};
 
+class TimerTest : public TimerListener{
+	void timerElapsed(void)
+	{
+		LOG_INFO_LN("timer elapsed = %l" , millis());
+		//EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
+	}
+};
 /**************************************************************************
  * Variables
  **************************************************************************/
-static BLETransceiver                   bleTransceiver(as8_bleName);
-
+//static BLETransceiver                   bleTransceiver(as8_bleName);
+Button button1(2, 1, true);
+TimerTest timerTest;
+Timer timer(&timerTest);
+Test testEvent;
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -56,15 +75,6 @@ void it(void){
 	value = (value+50)%250;
 	analogWrite(3, value);
 }
-#include "stdio.h"
-
-
-class Test : public EventListener{
-	void processEvent(uint8_t eventCode, int eventParam){
-		LOG_INFO_LN("event = %d - value = %l", eventCode, eventParam);
-	}
-};
-Test testEvent;
 
 void application_setup(void){
 	Serial.begin(9600);
@@ -78,20 +88,29 @@ void application_setup(void){
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();
 
-	pinMode(2, INPUT_PULLUP);
+	//timer.periodicNotify(50);
 	pinMode(3, OUTPUT);
 
 	//appliquer correctif pour RISING
 	//attachInterrupt(2, it, CHANGE);
 
-	bleTransceiver.init();
-	bleTransceiver.advertise();
+	//bleTransceiver.init();
+	//bleTransceiver.advertise();
 	extern const uint32_t FREE_MEM_PATTERN;
 	LOG_INFO_LN("stack size %x", FREE_MEM_PATTERN);
 	LOG_INFO_LN("Setup finished");
 
 	EventManager::getInstance()->addListener(TEST_EVENT, &testEvent);
 	EventManager::getInstance()->enableListener(TEST_EVENT, &testEvent, true);
+
+	EventManager::getInstance()->addListener(BUTTON_PRESSED, &testEvent);
+	EventManager::getInstance()->enableListener(BUTTON_PRESSED, &testEvent, true);
+
+	EventManager::getInstance()->addListener(BUTTON_SHORT_PRESS, &testEvent);
+	EventManager::getInstance()->enableListener(BUTTON_SHORT_PRESS, &testEvent, true);
+
+	EventManager::getInstance()->addListener(BUTTON_RELEASED, &testEvent);
+	EventManager::getInstance()->enableListener(BUTTON_RELEASED, &testEvent, true);
 }
 
 
@@ -100,14 +119,14 @@ void application_setup(void){
  * Called in application context
  */
 void application_loop(void){
-	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
-	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
-	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
-    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
-    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
+//	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
+//	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
+//	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
+//    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
+//    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
     MemoryWatcher::paintStackNow();
 
     EventManager::getInstance()->processAllEvents();
-    delay(1000);
-    EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
+    //delay(1000);
+    //EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
 }

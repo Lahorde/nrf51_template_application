@@ -31,7 +31,15 @@ typedef enum __attribute__ ((__packed__)) {
 /************************************************
  * INTERACTION events
  ************************************************/
-
+	/** buttons */
+	BUTTON_PRESSED,
+	BUTTON_RELEASED,
+	BUTTON_PRESSED_INT,
+	BUTTON_RELEASED_INT,
+	BUTTON_SHORT_PRESS,
+	BUTTON_MEDIUM_PRESS,
+	BUTTON_LONG_PRESS,
+	BUTTON_LONG_LONG_PRESS,
 /************************************************
  * PERCEPTION events
  ************************************************/

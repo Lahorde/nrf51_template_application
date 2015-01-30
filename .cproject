@@ -123,7 +123,7 @@
 									<listOptionValue builtIn="false" value="EVENTMANAGER_EVENT_QUEUE_SIZE=15"/>
 									<listOptionValue builtIn="false" value="NRF51"/>
 									<listOptionValue builtIn="false" value="F_CPU=16000000"/>
-									<listOptionValue builtIn="false" value="LOG_LEVEL=LOG_LEVEL_VERBOSE"/>
+									<listOptionValue builtIn="false" value="LOG_LEVEL=LOG_LEVEL_INFOS"/>
 									<listOptionValue builtIn="false" value="BLE_STACK_SUPPORT_REQD"/>
 									<listOptionValue builtIn="false" value="DEBUG_NRF_USER"/>
 								</option>

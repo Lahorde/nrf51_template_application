@@ -53,10 +53,11 @@ class TimerTest : public TimerListener{
  * Variables
  **************************************************************************/
 //static BLETransceiver                   bleTransceiver(as8_bleName);
-Button button1(2, 1, true);
-TimerTest timerTest;
-Timer timer(&timerTest);
-Test testEvent;
+static Button button1(2, 1, true);
+static TimerTest timerTest;
+static Timer timer(&timerTest);
+static Test testEvent;
+static const unsigned int LOOP_PERIOD_MS = 200;
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -119,14 +120,12 @@ void application_setup(void){
  * Called in application context
  */
 void application_loop(void){
-//	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
-//	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
-//	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
-//    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
-//    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
+	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
+	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
+	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
+    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
+    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
     MemoryWatcher::paintStackNow();
 
-    EventManager::getInstance()->processAllEvents();
-    //delay(1000);
-    //EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
+    EventManager::applicationTick(LOOP_PERIOD_MS);
 }

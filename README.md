@@ -65,3 +65,5 @@ printf= > trop de stack occupé
 new KO
 script pour stlink
 button en subtree
+ajout ITransceiver
+gérer reconnection

@@ -15,10 +15,11 @@
 #define BLETRANSCEIVER_H_
 
 #include "ble_uart_service.h"
-
 extern "C"{
-	#include "ble_conn_params.h"
+#include "ble_conn_params.h"
 }
+#include "transceiver.h"
+#include "ble_transceiver_listener.h"
 
 /**
  * @class BLETransceiver
@@ -27,7 +28,12 @@ extern "C"{
  * TODO_longer_description_of_class_meant_for_users._
  * 
  */
-class BLETransceiver {
+class BLETransceiver : public ITransceiver{
+public:
+	/** Error Codes */
+	static const int8_t TX_BUFFER_FULL = ITransceiver::LAST_ERROR_CODE + 1;
+	static const int8_t INVALID_STATE = TX_BUFFER_FULL + 1;
+
 private :
 	/** The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 	static const uint16_t APP_ADV_INTERVAL;
@@ -68,119 +74,172 @@ private :
 
 
 	/**< Structure to identify the Nordic UART Service. */
-    static ble_nus_t                        _m_nus;
-    /**< Security requirements for this application. */
-    static ble_gap_sec_params_t             m_sec_params;
-    /**< Handle of the current connection. */
-    static uint16_t  m_conn_handle;
+	static ble_nus_t                        _m_nus;
+	/**< Security requirements for this application. */
+	static ble_gap_sec_params_t             m_sec_params;
+	/**< Handle of the current connection. */
+	static uint16_t  _m_conn_handle;
 
-	 /**< Name of device. Will be included in the advertising data. */
+	/**< Name of device. Will be included in the advertising data. */
 	const char* _as8_deviceName;
+
+	bool _b_isAdvertising;
+
+	/** 1 single listener handled */
+	IBleTransceiverListener* _p_transceiverListener;
+
+	/** singleton */
+	static BLETransceiver _instance;
 public:
-  BLETransceiver(const char* arg_as8_deviceName);
-  virtual ~BLETransceiver();
+	BLETransceiver(void);
+	~BLETransceiver();
+	void addListener(IBleTransceiverListener* arg_p_transceiverListener);
+	void removeListener(IBleTransceiverListener* arg_p_transceiverListener);
+	static BLETransceiver* getInstance(void);
 
-  /**
-   * Initialize transceiver with needed BLE services
-   */
-  void init(void);
+	/**
+	 * Initialize transceiver with needed BLE services
+	 */
+	void init(const char* arg_as8_deviceName);
 
-  /**
-   * Start BLE advertisement
-   */
-  static void advertise(void);
+	/**
+	 * Start BLE advertisement
+	 */
+	Error advertise(void);
 
-  /**
-   * Send given date
-   * @param arg_au8_dataToSend
-   * @param arg_u8_dataLength
-   * @return true if data successfully been sent
-   */
-  bool sendData(uint8_t* arg_au8_dataToSend, uint8_t arg_u8_dataLength);
+	/**
+	 * Stop BLE advertisement
+	 */
+	Error stopAdvertisement(void);
+
+	bool isAdvertising(void);
+
+	/**
+	 * Connect transceiver
+	 */
+	Error connect(void);
+
+	/**
+	 * returns true if connected
+	 * @return
+	 */
+	bool isConnected(void);
+
+	/**
+	 * Disconnect transceiver
+	 */
+	Error disconnect(void);
+
+	/**
+	 * Send given bytes
+	 * @param arg_u16_nb_bytes number of bytes to send
+	 * @param arg_au8_bytes_send bytes to send, updated to number of bytes sent
+	 * @return number of bytes sent
+	 */
+	Error send(uint8_t& arg_u8_nb_bytes, uint8_t arg_au8_bytes_send[]);
+
+	/**
+	 * Receive given number of bytes.
+	 * @param arg_u16_nb_bytes number of received bytes to read, updated to number of bytes
+	 * successfully read
+	 * @param arg_au8_bytes_read bytes received
+	 * @return number of bytes received
+	 */
+	Error receive(uint8_t& arg_u8_nb_bytes, uint8_t arg_au8_bytesRead[]);
+
+	/**
+	 * When started, listener will be notified of rssi changes
+	 */
+	void startRSSIMeasure(void);
+
+	/**
+	 * When stopped, listener won't be notified of rssi changes
+	 */
+	void stopRSSIMeasure(void);
 
 private :
 
-  /**@brief Function for initializing the BLE stack.
-   *
-   * @details Initializes the SoftDevice and the BLE event interrupt.
-   */
-  void bleStackInit(void);
+	/**@brief Function for initializing the BLE stack.
+	 *
+	 * @details Initializes the SoftDevice and the BLE event interrupt.
+	 */
+	void bleStackInit(void);
 
-  /**@brief Function for initializing the Advertising functionality.
-   *
-   * @details Encodes the required advertising data and passes it to the stack.
-   *          Also builds a structure to be passed to the stack when starting advertising.
-   */
-  void advertisingInit(void);
+	/**@brief Function for initializing the Advertising functionality.
+	 *
+	 * @details Encodes the required advertising data and passes it to the stack.
+	 *          Also builds a structure to be passed to the stack when starting advertising.
+	 */
+	void advertisingInit(void);
 
-  /**@brief Function for initializing the Connection Parameters module.
-   */
-  void connParamsInit(void);
+	/**@brief Function for initializing the Connection Parameters module.
+	 */
+	void connParamsInit(void);
 
-  /**@brief Function for initializing services that will be used by the application.
-   */
-  void servicesInit(void);
+	/**@brief Function for initializing services that will be used by the application.
+	 */
+	void servicesInit(void);
 
-  /**@brief Function for the GAP initialization.
-   *
-   * @details This function sets up all the necessary GAP (Generic Access Profile) parameters of the
-   *          device including the device name, appearance, and the preferred connection parameters.
-   */
-  void gapParamsInit(void);
+	/**@brief Function for the GAP initialization.
+	 *
+	 * @details This function sets up all the necessary GAP (Generic Access Profile) parameters of the
+	 *          device including the device name, appearance, and the preferred connection parameters.
+	 */
+	void gapParamsInit(void);
 
-  /**@brief Function for dispatching a BLE stack event to all modules with a BLE stack event handler.
-   *
-   * @details This function is called from the scheduler in the main loop after a BLE stack
-   *          event has been received.
-   *
-   * @param[in]   p_ble_evt   Bluetooth stack event.
-   */
-  static void bleEvtDispatch(ble_evt_t * p_ble_evt);
+	/**@brief Function for dispatching a BLE stack event to all modules with a BLE stack event handler.
+	 *
+	 * @details This function is called from the scheduler in the main loop after a BLE stack
+	 *          event has been received.
+	 *
+	 * @param[in]   p_ble_evt   Bluetooth stack event.
+	 */
+	static void bleEvtDispatch(ble_evt_t * p_ble_evt);
 
-  /**@brief Function for initializing security parameters.
-   */
-  void secParamsInit(void);
+	/**@brief Function for initializing security parameters.
+	 */
+	void secParamsInit(void);
 
-  /**@brief Function for handling a Connection Parameters error.
-   *
-   * @param[in]   nrf_error   Error code containing information about what went wrong.
-   */
-  static void connParamsErrorHandler(uint32_t nrf_error);
+	/**@brief Function for handling a Connection Parameters error.
+	 *
+	 * @param[in]   nrf_error   Error code containing information about what went wrong.
+	 */
+	static void connParamsErrorHandler(uint32_t nrf_error);
 
-  /**@brief Function for handling the Application's BLE Stack events.
-   *
-   * @param[in]   p_ble_evt   Bluetooth stack event.
-   */
-  static void onBleEvt(ble_evt_t * p_ble_evt);
+	/**@brief Function for handling the Application's BLE Stack events.
+	 *
+	 * @param[in]   p_ble_evt   Bluetooth stack event.
+	 */
+	static void onBleEvt(ble_evt_t * p_ble_evt);
 
-  /**@brief    Function for handling the data from the Nordic UART Service.
-   *
-   * @details  This function will process the data received from the Nordic UART BLE Service and send
-   *           it to the UART module.
-   */
-  /**@snippet [Handling the data received over BLE] */
-  static void onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
+	/**@brief    Function for handling the data from the Nordic UART Service.
+	 *
+	 * @details  This function will process the data received from the Nordic UART BLE Service and send
+	 *           it to the UART module.
+	 */
+	/**@snippet [Handling the data received over BLE] */
+	static void onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
 
-  /**@brief Function for handling the Connection Parameters Module.
-   *
-   * @details This function will be called for all events in the Connection Parameters Module which
-   *          are passed to the application.
-   *          @note All this function does is to disconnect. This could have been done by simply
-   *                setting the disconnect_on_fail config parameter, but instead we use the event
-   *                handler mechanism to demonstrate its use.
-   *
-   * @param[in]   p_evt   Event received from the Connection Parameters Module.
-   */
-  static void onConnParamsEvt(ble_conn_params_evt_t * p_evt);
+	/**@brief Function for handling the Connection Parameters Module.
+	 *
+	 * @details This function will be called for all events in the Connection Parameters Module which
+	 *          are passed to the application.
+	 *          @note All this function does is to disconnect. This could have been done by simply
+	 *                setting the disconnect_on_fail config parameter, but instead we use the event
+	 *                handler mechanism to demonstrate its use.
+	 *
+	 * @param[in]   p_evt   Event received from the Connection Parameters Module.
+	 */
+	static void onConnParamsEvt(ble_conn_params_evt_t * p_evt);
 
-  /**@brief Function for dispatching a system event to interested modules.
-   *
-   * @details This function is called from the System event interrupt handler after a system
-   *          event has been received.
-   *
-   * @param[in]   sys_evt   System stack event.
-   */
-  static void sysEvtDispatch(uint32_t sys_evt);
+	/**@brief Function for dispatching a system event to interested modules.
+	 *
+	 * @details This function is called from the System event interrupt handler after a system
+	 *          event has been received.
+	 *
+	 * @param[in]   sys_evt   System stack event.
+	 */
+	static void sysEvtDispatch(uint32_t sys_evt);
 };
 
 #endif /* BLETRANSCEIVER_H_ */

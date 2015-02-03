@@ -24,60 +24,51 @@
 #include "EventManager.h"
 #include "events.h"
 #include "button.h"
+#include "pinout.h"
 
 /**************************************************************************
  * Manifest Constants
  **************************************************************************/
 const char* as8_bleName = "template_app";
+static const unsigned int LOOP_PERIOD_MS = 200;
+static const int8_t UNKNOWN_RSSI = 128;
+
+/**************************************************************************
+ * Local Functions
+ **************************************************************************/
+void sendLedStatus(bool arg_b_on);
 
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
-class Test : public EventListener{
-	void processEvent(uint8_t eventCode, int eventParam){
-		if(eventCode == TEST_EVENT)
-			LOG_INFO_LN("event = %d - value = %l", eventCode, eventParam);
-		else
-			LOG_INFO_LN("event = %d" , eventCode);
-	}
+class LedActivator : public EventListener{
+	void processEvent(uint8_t eventCode, int eventParam);
 };
 
-class TimerTest : public TimerListener{
-	void timerElapsed(void)
-	{
-		LOG_INFO_LN("timer elapsed = %l" , millis());
-		//EventManager::getInstance()->queueEvent(TEST_EVENT, millis());
-	}
+class BtListener : public IBleTransceiverListener{
+	void onDataReceived(uint8_t arg_u8_dataLength, uint8_t arg_au8_data[]);
+	void onConnection(void);
+	void onDisconnection(void);
+	void onRSSIChange(int8_t arg_s8_rssi);
 };
 /**************************************************************************
  * Variables
  **************************************************************************/
-//static BLETransceiver                   bleTransceiver(as8_bleName);
-static Button button1(2, 1, true);
-static TimerTest timerTest;
-static Timer timer(&timerTest);
-static Test testEvent;
-static const unsigned int LOOP_PERIOD_MS = 200;
+static Button button1(BUTTON_1_INPUT_PIN, 1, true);
+static LedActivator ledActivator;
+static BtListener btListener;
+static int8_t rssi = UNKNOWN_RSSI;
 /**************************************************************************
  * Macros
- **************************************************************************/
-
-/**************************************************************************
- * Local Functions
  **************************************************************************/
 
 /**************************************************************************
  * Global Functions
  **************************************************************************/
 
-volatile int value = 0;
-
-void it(void){
-	value = (value+50)%250;
-	analogWrite(3, value);
-}
-
 void application_setup(void){
+	BLETransceiver::Error loc_error;
+
 	Serial.begin(9600);
 	LOG_INIT(LOG_LEVEL);
 	LOG_INFO_LN("\nStarting application ...");
@@ -89,43 +80,131 @@ void application_setup(void){
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();
 
-	//timer.periodicNotify(50);
-	pinMode(3, OUTPUT);
+	 /** Add led */
+	pinMode(LED_1_OUTPUT_PIN, OUTPUT);
 
-	//appliquer correctif pour RISING
-	//attachInterrupt(2, it, CHANGE);
-
-	//bleTransceiver.init();
-	//bleTransceiver.advertise();
-	extern const uint32_t FREE_MEM_PATTERN;
-	LOG_INFO_LN("stack size %x", FREE_MEM_PATTERN);
+	BLETransceiver::getInstance()->addListener(&btListener);
+	BLETransceiver::getInstance()->init(as8_bleName);
+	loc_error = BLETransceiver::getInstance()->advertise();
+	if(loc_error != BLETransceiver::NO_ERROR){
+		LOG_ERROR("Error %d when launching advertisement", loc_error);
+	}
 	LOG_INFO_LN("Setup finished");
 
-	EventManager::getInstance()->addListener(TEST_EVENT, &testEvent);
-	EventManager::getInstance()->enableListener(TEST_EVENT, &testEvent, true);
+	EventManager::getInstance()->addListener(TEST_EVENT, &ledActivator);
+	EventManager::getInstance()->enableListener(TEST_EVENT, &ledActivator, true);
 
-	EventManager::getInstance()->addListener(BUTTON_PRESSED, &testEvent);
-	EventManager::getInstance()->enableListener(BUTTON_PRESSED, &testEvent, true);
+	EventManager::getInstance()->addListener(BUTTON_SHORT_PRESS, &ledActivator);
+	EventManager::getInstance()->enableListener(BUTTON_SHORT_PRESS, &ledActivator, true);
 
-	EventManager::getInstance()->addListener(BUTTON_SHORT_PRESS, &testEvent);
-	EventManager::getInstance()->enableListener(BUTTON_SHORT_PRESS, &testEvent, true);
-
-	EventManager::getInstance()->addListener(BUTTON_RELEASED, &testEvent);
-	EventManager::getInstance()->enableListener(BUTTON_RELEASED, &testEvent, true);
+	EventManager::getInstance()->addListener(BUTTON_MEDIUM_PRESS, &ledActivator);
+	EventManager::getInstance()->enableListener(BUTTON_MEDIUM_PRESS, &ledActivator, true);
 }
 
+void sendLedStatus(bool arg_b_on)
+{
+	uint8_t loc_u8_dataSize = sizeof(bool);
+	BLETransceiver::Error loc_error = BLETransceiver::getInstance()->send(loc_u8_dataSize, (uint8_t*) &arg_b_on);
+	if(loc_error != BLETransceiver::NO_ERROR){
+		LOG_INFO_LN("Led status could not be sent, error : %d ", loc_error);
+	}
+}
 
+void LedActivator::processEvent(uint8_t eventCode, int eventParam){
+	static bool ledOn = false;
+	BLETransceiver::Error loc_error;
+
+	if(eventCode == TEST_EVENT)
+		LOG_INFO_LN("event = %d - value = %l", eventCode, eventParam);
+	else if(eventCode == BUTTON_SHORT_PRESS)
+	{
+		ledOn = !ledOn;
+		digitalWrite(LED_1_OUTPUT_PIN, ledOn);
+		if(BLETransceiver::getInstance()->isConnected())
+		{
+			sendLedStatus(ledOn);
+		}
+	}
+	else if(eventCode == BUTTON_MEDIUM_PRESS)
+	{
+		LOG_INFO_LN("Button medium press");
+		if(BLETransceiver::getInstance()->isConnected())
+		{
+			LOG_INFO_LN("disconnect peripheral");
+			loc_error = BLETransceiver::getInstance()->disconnect();
+			if(loc_error != BLETransceiver::NO_ERROR){
+				LOG_ERROR("Error %d when disconnection peripheral", loc_error);
+				return;
+			}
+		}
+		else
+		{
+			if(BLETransceiver::getInstance()->isAdvertising())
+			{
+				LOG_INFO_LN("stop advertisement");
+				loc_error = BLETransceiver::getInstance()->stopAdvertisement();
+				if(loc_error != BLETransceiver::NO_ERROR){
+					LOG_ERROR("Error %d when stopping advertisement", loc_error);
+					return;
+				}
+			}
+			else
+			{
+				LOG_INFO_LN("start advertisement");
+				loc_error = BLETransceiver::getInstance()->advertise();
+				if(loc_error != BLETransceiver::NO_ERROR){
+					LOG_ERROR("Error %d when launching advertisement", loc_error);
+				}
+			}
+		}
+	}
+	else
+	{
+		LOG_INFO_LN("Event %d not handled", eventCode);
+	}
+}
+
+void BtListener::onDataReceived(uint8_t arg_u8_dataLength, uint8_t arg_au8_data[])
+{
+	LOG_INFO_LN("data received : ");
+	for(uint8_t loc_u8_Index = 0; loc_u8_Index < arg_u8_dataLength; loc_u8_Index++)
+	{
+		LOG_INFO_LN("%x", arg_au8_data[loc_u8_Index]);
+	}
+}
+
+void BtListener::onConnection(void)
+{
+	LOG_INFO_LN("peripheral connected");
+	BLETransceiver::getInstance()->startRSSIMeasure();
+}
+
+void BtListener::onDisconnection(void)
+{
+	LOG_INFO_LN("peripheral disconnected");
+	BLETransceiver::getInstance()->stopRSSIMeasure();
+	rssi = UNKNOWN_RSSI;
+}
+
+void BtListener::onRSSIChange(int8_t arg_s8_rssi)
+{
+	rssi = arg_s8_rssi;
+}
 
 /**
  * Called in application context
  */
 void application_loop(void){
-	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
-	LOG_INFO_LN(" remaining heap = %l", MemoryWatcher::getRemainingHeap());
-	LOG_INFO_LN(" remaining ram = %l", MemoryWatcher::getRemainingRAM());
-    LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
-    LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
-    MemoryWatcher::paintStackNow();
+	static uint32_t loc_u32_counter = 0;
+	loc_u32_counter++;
 
+	if(loc_u32_counter*LOOP_PERIOD_MS > 1000){
+		LOG_INFO_LN("Current silicium temp = %d C", nrf51_status_getSiliconTemp());
+		if(rssi != UNKNOWN_RSSI)
+			LOG_INFO_LN("RSSI = %d dbm", rssi);
+		loc_u32_counter = 0;
+	}
+    MemoryWatcher::checkRAMHistory();
+    MemoryWatcher::paintStackNow();
     EventManager::applicationTick(LOOP_PERIOD_MS);
 }

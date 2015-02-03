@@ -24,4 +24,16 @@ static const uint8_t UART_RX_PIN = 0;
 /** RFDuino Tx */
 static const uint8_t UART_TX_PIN = 1;
 
+/*********************************
+ * Buttons
+ *********************************/
+/** RFDuino GPIO 2 */
+static const uint8_t BUTTON_1_INPUT_PIN = 2;
+
+/*********************************
+ * LED
+ *********************************/
+/** RFDuino GPIO 3 */
+static const uint8_t LED_1_OUTPUT_PIN = 3;
+
 #endif /* PINOUT_H_ */

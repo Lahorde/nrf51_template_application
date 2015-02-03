@@ -3,7 +3,7 @@
  * @author  Rémi Pincent - INRIA
  * @date    14 janv. 2015   
  *
- * @brief TODO_one_line_description_of_file
+ * @brief Template application over nrf51.
  * 
  * Project : wimu
  * Contact:  Rémi Pincent - remi.pincent@inria.fr
@@ -41,8 +41,9 @@ void sendLedStatus(bool arg_b_on);
 /**************************************************************************
  * Type Definitions
  **************************************************************************/
-class LedActivator : public EventListener{
+class LedActivator : public EventListener, public TimerListener{
 	void processEvent(uint8_t eventCode, int eventParam);
+	void timerElapsed(void);
 };
 
 class BtListener : public IBleTransceiverListener{
@@ -56,8 +57,10 @@ class BtListener : public IBleTransceiverListener{
  **************************************************************************/
 static Button button1(BUTTON_1_INPUT_PIN, 1, true);
 static LedActivator ledActivator;
+Timer ledTimer(&ledActivator);
 static BtListener btListener;
 static int8_t rssi = UNKNOWN_RSSI;
+static bool ledOn = false;
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -89,6 +92,10 @@ void application_setup(void){
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_ERROR("Error %d when launching advertisement", loc_error);
 	}
+	else
+	{
+		ledTimer.periodicNotify(200);
+	}
 	LOG_INFO_LN("Setup finished");
 
 	EventManager::getInstance()->addListener(TEST_EVENT, &ledActivator);
@@ -111,7 +118,6 @@ void sendLedStatus(bool arg_b_on)
 }
 
 void LedActivator::processEvent(uint8_t eventCode, int eventParam){
-	static bool ledOn = false;
 	BLETransceiver::Error loc_error;
 
 	if(eventCode == TEST_EVENT)
@@ -155,12 +161,25 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 				if(loc_error != BLETransceiver::NO_ERROR){
 					LOG_ERROR("Error %d when launching advertisement", loc_error);
 				}
+				else
+				{
+					ledTimer.periodicNotify(200);
+				}
 			}
 		}
 	}
 	else
 	{
 		LOG_INFO_LN("Event %d not handled", eventCode);
+	}
+}
+
+void LedActivator::timerElapsed(void)
+{
+	if(BLETransceiver::getInstance()->isAdvertising()){
+		/** blink led */
+		ledOn = !ledOn;
+		digitalWrite(LED_1_OUTPUT_PIN, ledOn);
 	}
 }
 
@@ -176,14 +195,30 @@ void BtListener::onDataReceived(uint8_t arg_u8_dataLength, uint8_t arg_au8_data[
 void BtListener::onConnection(void)
 {
 	LOG_INFO_LN("peripheral connected");
+	ledTimer.cancel();
+	ledOn = 0;
+	digitalWrite(LED_1_OUTPUT_PIN, ledOn);
 	BLETransceiver::getInstance()->startRSSIMeasure();
 }
 
 void BtListener::onDisconnection(void)
 {
+	BLETransceiver::Error loc_error;
+
 	LOG_INFO_LN("peripheral disconnected");
+	ledOn = 0;
+	digitalWrite(LED_1_OUTPUT_PIN, ledOn);
 	BLETransceiver::getInstance()->stopRSSIMeasure();
 	rssi = UNKNOWN_RSSI;
+
+	loc_error = BLETransceiver::getInstance()->advertise();
+	if(loc_error != BLETransceiver::NO_ERROR){
+		LOG_ERROR("Error %d when launching advertisement", loc_error);
+	}
+	else
+	{
+		ledTimer.periodicNotify(200);
+	}
 }
 
 void BtListener::onRSSIChange(int8_t arg_s8_rssi)

@@ -166,7 +166,7 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.1070187122" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-Tgcc_nrf51_s110_xxaa_CXX.ld" valueType="string"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.mapfilename.424428488" name="Generate map" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.mapfilename" value="&quot;${BuildArtifactFileBaseName}.map&quot;" valueType="string"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano.1264368052" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano" value="false" valueType="boolean"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano.1264368052" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano" value="true" valueType="boolean"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input.2086816274" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -265,7 +265,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.1352135183" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.287311382" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.1460443778" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="-Tgcc_nrf51_s110_xxaa_CXX.ld" valueType="string"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano.1248310182" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano" value="false" valueType="boolean"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano.1248310182" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano" value="true" valueType="boolean"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.2144921993" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.2138344227"/>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.713046951" name="Cross ARM GNU Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.825394563"/>
@@ -276,7 +276,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="libraries/timer/timer2.cpp|fdf|profiles|nrf51_sdk_app_common|cortex_m0_release/rf_duino_system|nrf51_startup_files|rf_duino_system/CMSIS|arduino/core/Memory.c|nrf_delay|${NRF51_SDK_PATH}|libraries/event_manager/EventManager.cpp|nrf51822_sdk_src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="app_common/crc16.c|app_common/app_button.c|nrf_ecb|spi_slave|console|app_common/app_trace.c|app_common/hci_mem_pool.c|bootloader_dfu|sdk_soc|nrf_assert|templates/gcc|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|ble/ble_debug_assert_handler.c|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|templates/arm|twi_master|simple_uart|templates/iar|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|nrf_delay|app_common/app_uart_fifo.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nrf51822_sdk_src"/>
+						<entry excluding="app_common/crc16.c|app_common/app_button.c|nrf_ecb|spi_slave|console|app_common/app_trace.c|app_common/hci_mem_pool.c|bootloader_dfu|sdk_soc|nrf_assert|templates/gcc|ble/ble_error_log.c|ble/ble_radio_notification.c|ble/device_manager|ble/ble_dtm.c|app_common/app_gpiote.c|nrf_nvmc|ble/ble_sensorsim.c|spi_master|ble/ble_debug_assert_handler.c|app_common/hci_transport.c|ble/ble_services|ext_sensors|serialization|app_common/app_uart.c|ble/ble_racp.c|ble/ble_advdata_parser.c|app_common/hci_slip.c|templates/arm|twi_master|simple_uart|templates/iar|ble/ble_flash.c|app_common/app_fifo.c|ble/ble_db_discovery.c|gzp|nrf_delay|app_common/app_uart_fifo.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="nrf51822_sdk_src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -288,6 +288,7 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="debug_rfduino"/>
 		<configuration configurationName="release">
 			<resource resourceType="PROJECT" workspacePath="/nrf51_template_application"/>
 		</configuration>
@@ -298,10 +299,10 @@
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.565863334;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1914538878">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1393419053;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1048874358">
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.553145799;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.737576607">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.553145799;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.737576607">
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.647196178.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1393419053;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1048874358">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1971025156;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1254550262">

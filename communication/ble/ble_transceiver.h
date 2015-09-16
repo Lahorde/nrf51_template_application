@@ -33,10 +33,12 @@ public:
 	/** Error Codes */
 	static const int8_t TX_BUFFER_FULL = ITransceiver::LAST_ERROR_CODE + 1;
 	static const int8_t INVALID_STATE = TX_BUFFER_FULL + 1;
+	/** Try to send an object not handled in ble service */
+	static const int8_t INVALID_PROFILE_ATTRIBUTE = INVALID_STATE + 1;
 
 private :
 	/** The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-	static const uint16_t APP_ADV_INTERVAL;
+	static const uint16_t u16_appAdvInterval;
 	/** The advertising timeout (in units of seconds). */
 	static const uint16_t APP_ADV_TIMEOUT_IN_SECONDS;
 	/** Include the Service Changed characteristic in the local attributes */
@@ -49,9 +51,9 @@ private :
 	static const uint8_t MAX_CONN_PARAMS_UPDATE_COUNT;
 
 	/**< Minimum acceptable connection interval (0.5 seconds). */
-	static const uint16_t MIN_CONN_INTERVAL;
+	static const uint16_t u16_maxConnInterval;
 	/**< Maximum acceptable connection interval (1 second). */
-	static const uint16_t MAX_CONN_INTERVAL;
+	static const uint16_t u16_minConnInterval;
 	/**< Slave latency. */
 	static const uint16_t SLAVE_LATENCY;
 	/**< Connection supervisory timeout (4 seconds). */
@@ -74,22 +76,22 @@ private :
 
 
 	/**< Structure to identify the Nordic UART Service. */
-	static ble_nus_t                        _m_nus;
+	static ble_nus_t                        nus;
 	/**< Security requirements for this application. */
-	static ble_gap_sec_params_t             m_sec_params;
+	static ble_gap_sec_params_t             secParams;
 	/**< Handle of the current connection. */
-	static uint16_t  _m_conn_handle;
+	static uint16_t  u16_connHandle;
 
 	/**< Name of device. Will be included in the advertising data. */
-	const char* _as8_deviceName;
+	const char* as8_deviceName;
 
-	bool _b_isAdvertising;
+	bool b_isAdvertising;
 
 	/** 1 single listener handled */
-	IBleTransceiverListener* _p_transceiverListener;
+	IBleTransceiverListener* p_transceiverListener;
 
 	/** singleton */
-	static BLETransceiver _instance;
+	static BLETransceiver instance;
 public:
 	BLETransceiver(void);
 	~BLETransceiver();

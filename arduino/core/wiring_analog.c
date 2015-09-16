@@ -308,7 +308,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 	{	//if vaule 0 or >255, set LOW or HIGH
 		if(ulValue <= 0)
 		{  
-			PPI_Off_FROM_GPIO(nrf_pin);
+			ppiOffFromGPIO(nrf_pin);
 			NRF_GPIO->OUTCLR = (1 << nrf_pin);
 			return;
 		}
@@ -343,7 +343,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 				NRF_GPIO->OUTCLR = (1 << nrf_pin);	
 				
 				//fine a free gpiote channel
-				gpiote_channel = GPIOTE_Channel_Find();
+				gpiote_channel = gpioteChannelFind();
 				if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 				{
 					return;
@@ -367,7 +367,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 
 				//Interrupt setup
 				NRF_TIMER1->INTENSET = (TIMER_INTENSET_COMPARE3_Enabled << TIMER_INTENSET_COMPARE3_Pos);
-				linkInterrupt( TIMER1_IRQn, TIMER1_handler );
+				IntController_linkInterrupt( TIMER1_IRQn, TIMER1_handler );
 				//can't set low priority, else the GPIO polarity will change 
 				//NVIC_SetPriority(TIMER1_IRQn, 3);  
 				//NVIC_ClearPendingIRQ(TIMER1_IRQn);
@@ -375,7 +375,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 				NRF_TIMER1->TASKS_START = 1;				
 				// PPI for TIMER1 and IO TASK
 				nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-				GPIOTE_Channel_Set(gpiote_channel);
+				gpioteChannelSet(gpiote_channel);
 				PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 0);
 				//Save pin , channel and value
 				GPIOTE_Channel_for_Analog[0] = gpiote_channel;
@@ -393,13 +393,13 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//fine a free gpiote channel and configure the channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 0);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[0] = gpiote_channel;
@@ -416,14 +416,14 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 1);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[1] = gpiote_channel;
@@ -440,14 +440,14 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 2);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[2] = gpiote_channel;

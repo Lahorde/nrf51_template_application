@@ -55,7 +55,7 @@ void digitalWrite( uint32_t ulPin, uint32_t ulVal )
 	pin = arduinoToVariantPin(ulPin);
 	if(pin < 31)
 	{	//if pin is used for analog, release it.
-		PPI_Off_FROM_GPIO(pin);
+		ppiOffFromGPIO(pin);
 		if (ulVal)
 			NRF_GPIO->OUTSET = (1 << pin);
 		else
@@ -72,7 +72,7 @@ int digitalRead( uint32_t ulPin )
 	pin = arduinoToVariantPin(ulPin);
 	if(pin < 31)
 	{	
-		PPI_Off_FROM_GPIO(pin);
+		ppiOffFromGPIO(pin);
 		return ((NRF_GPIO->IN >> pin) & 1UL);
 	}
 	else

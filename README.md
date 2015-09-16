@@ -53,7 +53,8 @@ Eclipse CDT with GNU ARM plugin http://sourceforge.net/projects/gnuarmeclipse/
     * JLINK_DEBUGGER_PATH pointing to JLinkGDBServer folder
     
 #### Others
-Softdevice flashed on target
+Softdevice flashed on target : refer https://github.com/mrquincle/bluenet
+
 
 #### Application configuration
  * Event queue

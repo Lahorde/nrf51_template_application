@@ -83,11 +83,13 @@ void application_setup(void){
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();
 
+	/** Transceiver must be initialized before other application peripherals */
+	BLETransceiver::getInstance()->init(as8_bleName);
+
 	 /** Add led */
 	pinMode(LED_1_OUTPUT_PIN, OUTPUT);
 
 	BLETransceiver::getInstance()->addListener(&btListener);
-	BLETransceiver::getInstance()->init(as8_bleName);
 	loc_error = BLETransceiver::getInstance()->advertise();
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_ERROR("Error %d when launching advertisement", loc_error);

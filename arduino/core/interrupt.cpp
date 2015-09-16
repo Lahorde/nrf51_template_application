@@ -122,7 +122,7 @@ void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EP
 	nrf_gpiote_polarity_t loc_e_gpiotePol = NRF_GPIOTE_POLARITY_TOGGLE;
 	uint8_t channel;
 	
-	channel = GPIOTE_Channel_Find();
+	channel = gpioteChannelFind();
 	if(channel == UNAVAILABLE_GPIOTE_CHANNEL)
 	{
 		assert(false);
@@ -133,7 +133,7 @@ void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EP
 	assert(INVALID_PIN != nrf_pin);
 
 	loc_e_gpiotePol = pinTriggerToNRF51GPIOTEPol(arg_e_pinTrigger);
-	GPIOTE_Channel_Set(channel);
+	gpioteChannelSet(channel);
 	extIT[channel].u32_nrfPin = nrf_pin;
 	extIT[channel].e_trigger = arg_e_pinTrigger;
 	extIT[channel].cb = arg_pf_itHandler;
@@ -142,7 +142,7 @@ void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EP
 							| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)
 							| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);
 	enableGPIOTEInterrupt(channel);
-	linkInterrupt(GPIOTE_IRQn, GPIOTE_handler);
+	IntController_linkInterrupt(GPIOTE_IRQn, GPIOTE_handler);
 
 	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
 	APP_ERROR_CHECK(err_code);
@@ -185,7 +185,7 @@ void detachInterrupt(uint32_t arg_u32_pin )
 		return;
 	}
 	
-	GPIOTE_Channel_Clean(loc_u8_channel);
+	gpioteChannelClean(loc_u8_channel);
 	extIT[loc_u8_channel].e_trigger = OUT_OF_ENUM_PIN_TRIGGER;
 	extIT[loc_u8_channel].u32_nrfPin = INVALID_PIN;
 	extIT[loc_u8_channel].cb = NULL;
@@ -212,7 +212,7 @@ void detachInterrupt(uint32_t arg_u32_pin )
 			err_code = sd_nvic_DisableIRQ(GPIOTE_IRQn);
 			APP_ERROR_CHECK(err_code);
 		}
-		unlinkInterrupt(GPIOTE_IRQn);
+		IntController_unlinkInterrupt(GPIOTE_IRQn);
 	}
 }
 

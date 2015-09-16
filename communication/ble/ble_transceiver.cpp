@@ -25,7 +25,7 @@ extern "C" {
 #include "app_timer.h"
 }
 
-const uint16_t BLETransceiver::APP_ADV_INTERVAL                 = 64;
+const uint16_t BLETransceiver::u16_appAdvInterval                 = 64;
 const uint16_t BLETransceiver::APP_ADV_TIMEOUT_IN_SECONDS       = 180;
 const uint8_t BLETransceiver::IS_SRVC_CHANGED_CHARACT_PRESENT   = 0;
 
@@ -33,8 +33,8 @@ const uint32_t BLETransceiver::FIRST_CONN_PARAMS_UPDATE_DELAY   = APP_TIMER_TICK
 const uint32_t BLETransceiver::NEXT_CONN_PARAMS_UPDATE_DELAY    = APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER);
 const uint8_t BLETransceiver::MAX_CONN_PARAMS_UPDATE_COUNT      = 3;
 
-const uint16_t BLETransceiver::MIN_CONN_INTERVAL                = MSEC_TO_UNITS(100, UNIT_1_25_MS);
-const uint16_t BLETransceiver::MAX_CONN_INTERVAL                = MSEC_TO_UNITS(200, UNIT_1_25_MS);
+const uint16_t BLETransceiver::u16_maxConnInterval                = MSEC_TO_UNITS(100, UNIT_1_25_MS);
+const uint16_t BLETransceiver::u16_minConnInterval                = MSEC_TO_UNITS(200, UNIT_1_25_MS);
 const uint16_t BLETransceiver::SLAVE_LATENCY                    = 0;
 const uint16_t BLETransceiver::CONN_SUP_TIMEOUT                 = MSEC_TO_UNITS(4000, UNIT_10_MS);
 
@@ -46,43 +46,43 @@ const uint8_t BLETransceiver::SEC_PARAM_OOB                      = 0;
 const uint8_t BLETransceiver::SEC_PARAM_MIN_KEY_SIZE             = 7;
 const uint8_t BLETransceiver::SEC_PARAM_MAX_KEY_SIZE             = 16;
 
-uint16_t  BLETransceiver::_m_conn_handle                          = BLE_CONN_HANDLE_INVALID;
-ble_nus_t BLETransceiver::_m_nus;
-ble_gap_sec_params_t             BLETransceiver::m_sec_params;
-BLETransceiver BLETransceiver::_instance;
+uint16_t  BLETransceiver::u16_connHandle                          = BLE_CONN_HANDLE_INVALID;
+ble_nus_t BLETransceiver::nus;
+ble_gap_sec_params_t             BLETransceiver::secParams;
+BLETransceiver BLETransceiver::instance;
 
-BLETransceiver::BLETransceiver(void):_as8_deviceName("ble_transceiver"),
-		_b_isAdvertising(false),
-		_p_transceiverListener(NULL)
+BLETransceiver::BLETransceiver(void):as8_deviceName("ble_transceiver"),
+		b_isAdvertising(false),
+		p_transceiverListener(NULL)
 {
 }
 
 BLETransceiver::~BLETransceiver()
 {
-	if(_p_transceiverListener != NULL)
+	if(p_transceiverListener != NULL)
 	{
-		removeListener(_p_transceiverListener);
+		removeListener(p_transceiverListener);
 	}
-	_b_isAdvertising = false;
+	b_isAdvertising = false;
 }
 
 void BLETransceiver::addListener(IBleTransceiverListener* arg_p_transceiverListener)
 {
-	_p_transceiverListener = arg_p_transceiverListener;
+	p_transceiverListener = arg_p_transceiverListener;
 }
 void BLETransceiver::removeListener(IBleTransceiverListener* arg_p_transceiverListener)
 {
-	_p_transceiverListener = arg_p_transceiverListener;
+	p_transceiverListener = arg_p_transceiverListener;
 }
 
 BLETransceiver* BLETransceiver::getInstance(void)
 {
-	return &_instance;
+	return &instance;
 }
 
 void BLETransceiver::init(const char* arg_as8_deviceName)
 {
-	_as8_deviceName = arg_as8_deviceName;
+	as8_deviceName = arg_as8_deviceName;
 	bleStackInit();
 	gapParamsInit();
 	servicesInit();
@@ -103,7 +103,7 @@ BLETransceiver::Error BLETransceiver::advertise(void)
 	adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
 	adv_params.p_peer_addr = NULL;
 	adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-	adv_params.interval    = APP_ADV_INTERVAL;
+	adv_params.interval    = u16_appAdvInterval;
 	adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
@@ -113,7 +113,7 @@ BLETransceiver::Error BLETransceiver::advertise(void)
 	}
 	else
 	{
-		_b_isAdvertising = true;
+		b_isAdvertising = true;
 		loc_s8_err = NO_ERROR;
 	}
 	return loc_s8_err;
@@ -131,7 +131,7 @@ BLETransceiver::Error BLETransceiver::stopAdvertisement(void)
 	}
 	else
 	{
-		_b_isAdvertising = false;
+		b_isAdvertising = false;
 		loc_s8_err = NO_ERROR;
 	}
 	return loc_s8_err;
@@ -139,7 +139,7 @@ BLETransceiver::Error BLETransceiver::stopAdvertisement(void)
 
 bool BLETransceiver::isAdvertising(void)
 {
-	return _b_isAdvertising;
+	return b_isAdvertising;
 }
 
 BLETransceiver::Error BLETransceiver::connect(void)
@@ -150,13 +150,13 @@ BLETransceiver::Error BLETransceiver::connect(void)
 
 bool BLETransceiver::isConnected(void)
 {
-	return _m_conn_handle != BLE_CONN_HANDLE_INVALID;
+	return u16_connHandle != BLE_CONN_HANDLE_INVALID;
 }
 
 BLETransceiver::Error BLETransceiver::disconnect(void)
 {
 	Error loc_s8_err = GENERAL_ERROR;
-	uint32_t err_code = sd_ble_gap_disconnect(_m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+	uint32_t err_code = sd_ble_gap_disconnect(u16_connHandle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
 
 	if(err_code == NRF_ERROR_INVALID_STATE)
 	{
@@ -180,7 +180,7 @@ BLETransceiver::Error BLETransceiver::send(uint8_t& arg_u8_nb_bytes, uint8_t arg
 	uint32_t err_code;
 	Error loc_s8_err = GENERAL_ERROR;
 
-	err_code = ble_nus_send_string(&_m_nus, arg_au8_bytes_send, arg_u8_nb_bytes);
+	err_code = ble_nus_send_string(&nus, arg_au8_bytes_send, arg_u8_nb_bytes);
 
 	if(err_code == BLE_ERROR_NO_TX_BUFFERS)
 	{
@@ -191,6 +191,11 @@ BLETransceiver::Error BLETransceiver::send(uint8_t& arg_u8_nb_bytes, uint8_t arg
 	else if(err_code == NRF_ERROR_INVALID_STATE)
 	{
 		loc_s8_err = INVALID_STATE;
+		arg_u8_nb_bytes = 0;
+	}
+	else if(err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+	{
+		loc_s8_err = INVALID_PROFILE_ATTRIBUTE;
 		arg_u8_nb_bytes = 0;
 	}
 	else if (err_code == NRF_SUCCESS)
@@ -215,12 +220,12 @@ BLETransceiver::Error BLETransceiver::receive(uint8_t& arg_u8_nb_bytes, uint8_t 
 
 void BLETransceiver::startRSSIMeasure(void)
 {
-	sd_ble_gap_rssi_start(_m_conn_handle);
+	sd_ble_gap_rssi_start(u16_connHandle);
 }
 
 void BLETransceiver::stopRSSIMeasure(void)
 {
-	sd_ble_gap_rssi_stop(_m_conn_handle);
+	sd_ble_gap_rssi_stop(u16_connHandle);
 }
 
 void BLETransceiver::bleStackInit(void)
@@ -258,7 +263,7 @@ void BLETransceiver::advertisingInit(void)
 	ble_advdata_t scanrsp;
 	uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
-	ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE, _m_nus.uuid_type}};
+	ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE, nus.uuid_type}};
 
 	// Build and set advertising data
 	memset(&advdata, 0, sizeof(advdata));
@@ -306,7 +311,7 @@ void BLETransceiver::servicesInit(void)
 	nus_init.data_handler = onBLERX;
 
 	/** initialize UART service */
-	err_code = ble_nus_init(&_m_nus, &nus_init);
+	err_code = ble_nus_init(&nus, &nus_init);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -319,14 +324,14 @@ void BLETransceiver::gapParamsInit(void)
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
 	err_code = sd_ble_gap_device_name_set(&sec_mode,
-			(const uint8_t *)_as8_deviceName,
-			strlen(_as8_deviceName));
+			(const uint8_t *)as8_deviceName,
+			strlen(as8_deviceName));
 	APP_ERROR_CHECK(err_code);
 
 	memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 
-	gap_conn_params.min_conn_interval = MIN_CONN_INTERVAL;
-	gap_conn_params.max_conn_interval = MAX_CONN_INTERVAL;
+	gap_conn_params.min_conn_interval = u16_maxConnInterval;
+	gap_conn_params.max_conn_interval = u16_minConnInterval;
 	gap_conn_params.slave_latency     = SLAVE_LATENCY;
 	gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
 
@@ -337,7 +342,7 @@ void BLETransceiver::gapParamsInit(void)
 void BLETransceiver::bleEvtDispatch(ble_evt_t * p_ble_evt)
 {
 	ble_conn_params_on_ble_evt(p_ble_evt);
-	ble_nus_on_ble_evt(&_m_nus, p_ble_evt);
+	ble_nus_on_ble_evt(&nus, p_ble_evt);
 	onBleEvt(p_ble_evt);
 }
 
@@ -353,31 +358,31 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 	{
 	case BLE_GAP_EVT_CONNECTED:
 		//RP - 14/01/2015 - notify
-		_m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-		getInstance()->_b_isAdvertising = false;
-		if(getInstance()->_p_transceiverListener)
+		u16_connHandle = p_ble_evt->evt.gap_evt.conn_handle;
+		getInstance()->b_isAdvertising = false;
+		if(getInstance()->p_transceiverListener)
 		{
-			getInstance()->_p_transceiverListener->onConnection();
+			getInstance()->p_transceiverListener->onConnection();
 		}
 		break;
 
 	case BLE_GAP_EVT_DISCONNECTED:
-		_m_conn_handle = BLE_CONN_HANDLE_INVALID;
-		if(getInstance()->_p_transceiverListener)
+		u16_connHandle = BLE_CONN_HANDLE_INVALID;
+		if(getInstance()->p_transceiverListener)
 		{
-			getInstance()->_p_transceiverListener->onDisconnection();
+			getInstance()->p_transceiverListener->onDisconnection();
 		}
 		break;
 
 	case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-		err_code = sd_ble_gap_sec_params_reply(_m_conn_handle,
+		err_code = sd_ble_gap_sec_params_reply(u16_connHandle,
 				BLE_GAP_SEC_STATUS_SUCCESS,
-				&m_sec_params);
+				&secParams);
 		APP_ERROR_CHECK(err_code);
 		break;
 
 	case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-		err_code = sd_ble_gatts_sys_attr_set(_m_conn_handle, NULL, 0);
+		err_code = sd_ble_gatts_sys_attr_set(u16_connHandle, NULL, 0);
 		APP_ERROR_CHECK(err_code);
 		break;
 
@@ -389,13 +394,13 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 		p_enc_info = &m_auth_status.periph_keys.enc_info;
 		if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
 		{
-			err_code = sd_ble_gap_sec_info_reply(_m_conn_handle, p_enc_info, NULL);
+			err_code = sd_ble_gap_sec_info_reply(u16_connHandle, p_enc_info, NULL);
 			APP_ERROR_CHECK(err_code);
 		}
 		else
 		{
 			// No keys found for this device
-			err_code = sd_ble_gap_sec_info_reply(_m_conn_handle, NULL, NULL);
+			err_code = sd_ble_gap_sec_info_reply(u16_connHandle, NULL, NULL);
 			APP_ERROR_CHECK(err_code);
 		}
 		break;
@@ -419,9 +424,9 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 		break;
 
 	case BLE_GAP_EVT_RSSI_CHANGED:
-		if(getInstance()->_p_transceiverListener)
+		if(getInstance()->p_transceiverListener)
 		{
-			getInstance()->_p_transceiverListener->onRSSIChange(p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
+			getInstance()->p_transceiverListener->onRSSIChange(p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
 		}
 		break;
 
@@ -433,13 +438,13 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 
 void BLETransceiver::secParamsInit(void)
 {
-	m_sec_params.timeout      = SEC_PARAM_TIMEOUT;
-	m_sec_params.bond         = SEC_PARAM_BOND;
-	m_sec_params.mitm         = SEC_PARAM_MITM;
-	m_sec_params.io_caps      = SEC_PARAM_IO_CAPABILITIES;
-	m_sec_params.oob          = SEC_PARAM_OOB;
-	m_sec_params.min_key_size = SEC_PARAM_MIN_KEY_SIZE;
-	m_sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
+	secParams.timeout      = SEC_PARAM_TIMEOUT;
+	secParams.bond         = SEC_PARAM_BOND;
+	secParams.mitm         = SEC_PARAM_MITM;
+	secParams.io_caps      = SEC_PARAM_IO_CAPABILITIES;
+	secParams.oob          = SEC_PARAM_OOB;
+	secParams.min_key_size = SEC_PARAM_MIN_KEY_SIZE;
+	secParams.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
 }
 
 void BLETransceiver::onConnParamsEvt(ble_conn_params_evt_t * p_evt)
@@ -448,16 +453,16 @@ void BLETransceiver::onConnParamsEvt(ble_conn_params_evt_t * p_evt)
 
 	if(p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED)
 	{
-		err_code = sd_ble_gap_disconnect(_m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+		err_code = sd_ble_gap_disconnect(u16_connHandle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
 		APP_ERROR_CHECK(err_code);
 	}
 }
 
 void BLETransceiver::onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
-	if(getInstance()->_p_transceiverListener)
+	if(getInstance()->p_transceiverListener)
 	{
-		getInstance()->_p_transceiverListener->onDataReceived(length, p_data);
+		getInstance()->p_transceiverListener->onDataReceived(length, p_data);
 	}
 }
 

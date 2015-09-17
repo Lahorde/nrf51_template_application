@@ -31,8 +31,8 @@ void UARTClass::begin(const uint32_t BaudRate, uint32_t rx_pin, uint32_t tx_pin)
 {	
 	uint32_t t_pin, r_pin;
 	//transform arduino_pin to nrf51_pin
-	t_pin = Pin_nRF51822_to_Arduino(tx_pin);
-	r_pin = Pin_nRF51822_to_Arduino(rx_pin);
+	t_pin = arduinoToVariantPin(tx_pin);
+	r_pin = arduinoToVariantPin(rx_pin);
 	
 	UART0_Start( BaudRate, r_pin, t_pin );
 }

@@ -128,7 +128,7 @@ void UART0_Start(uint32_t BaudRate, uint32_t rx_pin, uint32_t tx_pin )
 	NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
 	NVIC_SetPriority(UART0_IRQn, 3);
 	
-	linkInterrupt( UART0_IRQn, UART0_handler);
+	IntController_linkInterrupt( UART0_IRQn, UART0_handler);
     NVIC_EnableIRQ(UART0_IRQn);
 	
 	UART0_State = UART0_BeforeFirstTX;

@@ -23,12 +23,12 @@ void tone(uint32_t pin, uint16_t freq, uint32_t duration)
 	uint32_t i,prescaler, compare, nrf_pin, err_code = NRF_SUCCESS;
 	uint8_t channel, softdevice_enabled;
 	
-	channel = GPIOTE_Channel_Find();
+	channel = gpioteChannelFind();
 	if(channel == UNAVAILABLE_GPIOTE_CHANNEL)
 	{
 		return;
 	}
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	if(nrf_pin < 31)
 	{
 		//save the pin number
@@ -67,7 +67,7 @@ void tone(uint32_t pin, uint16_t freq, uint32_t duration)
 		//pin_state = 0;
 		//use ppi and gpiote_task 
 		tone_channel = channel;
-		GPIOTE_Channel_Set(channel);
+		gpioteChannelSet(channel);
 		nrf_gpiote_task_config(channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
 		//configure PPI
 		err_code = sd_softdevice_is_enabled(&softdevice_enabled);
@@ -100,7 +100,7 @@ void tone(uint32_t pin, uint16_t freq, uint32_t duration)
 		NRF_TIMER2->INTENCLR = 0xFFFFFFFF;
 		NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);
 		//open IRQ
-		linkInterrupt(TIMER2_IRQn, TIMER2_handler);
+		IntController_linkInterrupt(TIMER2_IRQn, TIMER2_handler);
 		NVIC_EnableIRQ(TIMER2_IRQn);
 		NRF_TIMER2->TASKS_START = 1;
 	}
@@ -122,16 +122,16 @@ void noTone(uint32_t pin)
 	uint8_t softdevice_enabled;
 	uint32_t nrf_pin, err_code = NRF_SUCCESS;
 	
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
 	if(nrf_pin < 31)
 	{	
 		if(nrf_pin == tone_pin )
 		{	//stop TIMER2
 			NRF_TIMER2->TASKS_STOP = 1;
-			unlinkInterrupt(TIMER2_IRQn);
+			IntController_unlinkInterrupt(TIMER2_IRQn);
 			NVIC_DisableIRQ(TIMER2_IRQn); 
 			//uconfig GPIOTE channel
-			GPIOTE_Channel_Clean(tone_channel);
+			gpioteChannelClean(tone_channel);
 			tone_channel = 255;
 			
 			err_code = sd_softdevice_is_enabled(&softdevice_enabled);

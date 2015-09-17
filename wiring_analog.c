@@ -1,12 +1,30 @@
-
 #include "Arduino.h"
 #include "nrf_soc.h"
 #include "nrf_sdm.h"
 #include "nrf_gpiote.h"
 #include "app_error.h"
+#include "app_scheduler.h"
 #include "inter_periph_com.h"
+#include "interrupt_controller.h"
 
-//uint8_t Timer2_Occupied_Pin[3] = {255, 255, 255}; 
+/**************************************************************************
+ * Global Functions Declarations
+ **************************************************************************/
+void ADC_IRQHandler(void);
+
+/**************************************************************************
+ * Static Functions Declarations
+ **************************************************************************/
+
+/**
+ * Called in application context when an ADC conversion has completed
+ * @param p_event_data
+ * @param event_size
+ */
+static void app_adc_evt_get(void * p_event_data, uint16_t event_size);
+/**************************************************************************
+ * Variables
+ **************************************************************************/
 
 static uint32_t PWM_Channels_Value[3] = {((2^PWM_RESOLUTION) - 1), ((2^PWM_RESOLUTION) - 1), ((2^PWM_RESOLUTION) - 1)};		//the PWM value to update
 static uint8_t  PWM_Channels_Start[3] = {0, 0, 0};																			//1:start, 0:stop
@@ -18,6 +36,9 @@ static uint32_t analogReference_inpsel_type = INPSEL_AIN_1_3_PS;
 //
 static uint8_t analogReadResolution_bit 	= READ_CURRENT_RESOLUTION;
 static uint8_t analogWriteResolution_bit	= WRITE_CURRENT_RESOLUTION;
+
+//current converson on going - only handle 1 conversion at a time
+static on_adc_conversion_handler_t onADCReadCb = NULL;
 
 /**********************************************************************
 name :
@@ -92,38 +113,78 @@ uint32_t analogRead(uint32_t pin)
     uint32_t value = 0;
 	uint32_t pValue = 0;
 	uint32_t nrf_pin = 0;
+
 	//PIN transform to nRF51822
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
+	nrf_pin = arduinoToVariantPin(pin);
+	APP_ERROR_CHECK_BOOL(INVALID_PIN != nrf_pin);
 	
-	if( nrf_pin > 0 && nrf_pin < 7)
-	{	
-		pValue = (1 << (nrf_pin + 1));
-		NRF_ADC->CONFIG = ( ADC_CONFIG_RES_10bit << ADC_CONFIG_RES_Pos) |
-						  ( analogReference_inpsel_type << ADC_CONFIG_INPSEL_Pos) |
-						  ( analogReference_type << ADC_CONFIG_REFSEL_Pos) |
-						  ( pValue << ADC_CONFIG_PSEL_Pos) |
-						  ( analogReference_ext_type << ADC_CONFIG_EXTREFSEL_Pos);
+	/** Only 1 conversion at a time */
+	APP_ERROR_CHECK_BOOL(onADCReadCb == NULL);
+
+	pValue = (1 << (nrf_pin + 1));
+	NRF_ADC->CONFIG = ( ADC_CONFIG_RES_10bit << ADC_CONFIG_RES_Pos) |
+						 ( analogReference_inpsel_type << ADC_CONFIG_INPSEL_Pos) |
+						 ( analogReference_type << ADC_CONFIG_REFSEL_Pos) |
+						 ( pValue << ADC_CONFIG_PSEL_Pos) |
+						 ( analogReference_ext_type << ADC_CONFIG_EXTREFSEL_Pos);
 		
-		NRF_ADC->INTENCLR = 0xFFFFFFFF;
-		NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled << ADC_ENABLE_ENABLE_Pos;
-		NRF_ADC->TASKS_START = 1;
+	NRF_ADC->INTENCLR = ADC_INTENCLR_END_Msk;
+	NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled << ADC_ENABLE_ENABLE_Pos;
+	NRF_ADC->TASKS_START = 1;
 		
-		while( (NRF_ADC->BUSY & ADC_BUSY_BUSY_Msk) == (ADC_BUSY_BUSY_Busy << ADC_BUSY_BUSY_Pos) );
+	while( (NRF_ADC->BUSY & ADC_BUSY_BUSY_Msk) == (ADC_BUSY_BUSY_Busy << ADC_BUSY_BUSY_Pos) );
 		
-		value = NRF_ADC->RESULT;
+	value = NRF_ADC->RESULT;
 		
-		value = conversion_Resolution(value, ADC_RESOLUTION, analogReadResolution_bit);
-		NRF_ADC->ENABLE = (ADC_ENABLE_ENABLE_Disabled 	<< ADC_ENABLE_ENABLE_Pos);
-		NRF_ADC->CONFIG = 	(ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) |
-							(ADC_CONFIG_INPSEL_SupplyTwoThirdsPrescaling << ADC_CONFIG_INPSEL_Pos) |
-							(ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) |
-							(ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) |
-							(ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);			
-		
-		
-	}
+	value = conversion_Resolution(value, ADC_RESOLUTION, analogReadResolution_bit);
+	NRF_ADC->ENABLE = (ADC_ENABLE_ENABLE_Disabled 	<< ADC_ENABLE_ENABLE_Pos);
+	NRF_ADC->CONFIG = 	(ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) |
+						(ADC_CONFIG_INPSEL_SupplyTwoThirdsPrescaling << ADC_CONFIG_INPSEL_Pos) |
+						(ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) |
+						(ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) |
+						(ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
 	return value;
 }
+
+bool analogAsyncRead( uint32_t ulPin,  on_adc_conversion_handler_t arg_adcCb)
+{
+	uint32_t nrf_pin = 0;
+	uint32_t pValue = 0;
+
+    if(onADCReadCb != NULL)
+    {
+    	/** A conversion already on going */
+    	return false;
+    }
+    APP_ERROR_CHECK_BOOL(arg_adcCb != NULL);
+    onADCReadCb = arg_adcCb;
+
+	//PIN transform to nRF51822
+	nrf_pin = arduinoToVariantPin(ulPin);
+	APP_ERROR_CHECK_BOOL(INVALID_PIN != nrf_pin);
+
+	pValue = (1 << (nrf_pin + 1));
+
+    // Configure ADC
+    NRF_ADC->INTENSET   = ADC_INTENSET_END_Msk;
+    NRF_ADC->CONFIG     = (ADC_CONFIG_RES_10bit                        << ADC_CONFIG_RES_Pos)     |
+                          (analogReference_inpsel_type                 << ADC_CONFIG_INPSEL_Pos)  |
+                          (analogReference_type                        << ADC_CONFIG_REFSEL_Pos)  |
+                          (pValue                                      << ADC_CONFIG_PSEL_Pos)    |
+                          (analogReference_ext_type                    << ADC_CONFIG_EXTREFSEL_Pos);
+    NRF_ADC->EVENTS_END = 0;
+    NRF_ADC->ENABLE     = ADC_ENABLE_ENABLE_Enabled;
+
+    // Enable ADC interrupt
+    if(!IntController_enableIRQ(ADC_IRQn, NRF_APP_PRIORITY_LOW))
+    {
+    	return false;
+    }
+
+    NRF_ADC->EVENTS_END  = 0;    // Stop any running conversions.
+    NRF_ADC->TASKS_START = 1;
+}
+
 /**********************************************************************
 name :
 function : PWM update
@@ -152,8 +213,8 @@ void PPI_ON_TIMER_GPIO(uint32_t gpiote_channel, NRF_TIMER_Type* Timer, uint32_t 
 	uint8_t  softdevice_enabled;
 
 	// Initialize Programmable Peripheral Interconnect
-	int chan_0 = find_free_PPI_channel(255);
-	int chan_1 = find_free_PPI_channel(chan_0);
+	int chan_0 = findFreePPIChannel(255);
+	int chan_1 = findFreePPIChannel(chan_0);
 	
 	if ((chan_0 != 255) && (chan_1 != 255))
 	{	
@@ -303,12 +364,12 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 	uint32_t nrf_pin, max_value;
 	uint8_t gpiote_channel;
 
-	nrf_pin = Pin_nRF51822_to_Arduino(ulPin);
+	nrf_pin = arduinoToVariantPin(ulPin);
 	if( nrf_pin < 31)
 	{	//if vaule 0 or >255, set LOW or HIGH
 		if(ulValue <= 0)
 		{  
-			PPI_Off_FROM_GPIO(nrf_pin);
+			ppiOffFromGPIO(nrf_pin);
 			NRF_GPIO->OUTCLR = (1 << nrf_pin);
 			return;
 		}
@@ -343,7 +404,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 				NRF_GPIO->OUTCLR = (1 << nrf_pin);	
 				
 				//fine a free gpiote channel
-				gpiote_channel = GPIOTE_Channel_Find();
+				gpiote_channel = gpioteChannelFind();
 				if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 				{
 					return;
@@ -367,7 +428,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 
 				//Interrupt setup
 				NRF_TIMER1->INTENSET = (TIMER_INTENSET_COMPARE3_Enabled << TIMER_INTENSET_COMPARE3_Pos);
-				linkInterrupt( TIMER1_IRQn, TIMER1_handler );
+				IntController_linkInterrupt( TIMER1_IRQn, TIMER1_handler );
 				//can't set low priority, else the GPIO polarity will change 
 				//NVIC_SetPriority(TIMER1_IRQn, 3);  
 				//NVIC_ClearPendingIRQ(TIMER1_IRQn);
@@ -375,7 +436,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 				NRF_TIMER1->TASKS_START = 1;				
 				// PPI for TIMER1 and IO TASK
 				nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-				GPIOTE_Channel_Set(gpiote_channel);
+				gpioteChannelSet(gpiote_channel);
 				PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 0);
 				//Save pin , channel and value
 				GPIOTE_Channel_for_Analog[0] = gpiote_channel;
@@ -393,13 +454,13 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//fine a free gpiote channel and configure the channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 0);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[0] = gpiote_channel;
@@ -416,14 +477,14 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 1);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[1] = gpiote_channel;
@@ -440,14 +501,14 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 												| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
 					NRF_GPIO->OUTCLR = (1 << nrf_pin);
 					//find a free gpiote channel
-					gpiote_channel = GPIOTE_Channel_Find();
+					gpiote_channel = gpioteChannelFind();
 					if( gpiote_channel == UNAVAILABLE_GPIOTE_CHANNEL )
 					{
 						return;
 					}
 					
 					nrf_gpiote_task_config(gpiote_channel, nrf_pin, NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
-					GPIOTE_Channel_Set(gpiote_channel);
+					gpioteChannelSet(gpiote_channel);
 					PPI_ON_TIMER_GPIO(gpiote_channel, NRF_TIMER1, 2);
 					//save the pin and value
 					GPIOTE_Channel_for_Analog[2] = gpiote_channel;
@@ -462,4 +523,33 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue)
 			}
 		}	
 	}
+}
+
+static void app_adc_evt_get(void * p_event_data, uint16_t event_size)
+{
+	app_adc_conversion_event_t * app_adc_event = (app_adc_conversion_event_t *)p_event_data;
+
+    APP_ERROR_CHECK_BOOL(event_size == sizeof(app_adc_conversion_event_t));
+    onADCReadCb = NULL;
+    app_adc_event->adc_handler(&app_adc_event->u32_adcValue);
+}
+
+/**@brief Function for handling the ADC interrupt.
+ * @details  This function will fetch the conversion result from the ADC
+ */
+void ADC_IRQHandler(void)
+{
+	app_adc_conversion_event_t app_adc_event;
+
+    if (NRF_ADC->EVENTS_END != 0)
+    {
+        APP_ERROR_CHECK_BOOL(onADCReadCb != NULL);
+        app_adc_event.adc_handler = onADCReadCb;
+        NRF_ADC->EVENTS_END     = 0;
+        app_adc_event.u32_adcValue =  conversion_Resolution(NRF_ADC->RESULT, ADC_RESOLUTION, analogReadResolution_bit);
+        NRF_ADC->TASKS_STOP     = 1;
+        NRF_ADC->INTENCLR = ADC_INTENCLR_END_Msk;
+
+        app_sched_event_put(&app_adc_event, sizeof(app_adc_event), app_adc_evt_get);
+    }
 }

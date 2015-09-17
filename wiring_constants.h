@@ -1,7 +1,7 @@
-
-
 #ifndef _WIRING_CONSTANTS_
 #define _WIRING_CONSTANTS_
+
+#include "nrf_soc.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -43,9 +43,10 @@ typedef enum{
 }EPinState;
 
 typedef enum{
-	CHANGE          = 2,
-	FALLING         = 3,
-	RISING          = 4
+	CHANGE                    = 2,
+	FALLING                   = 3,
+	RISING                    = 4,
+	OUT_OF_ENUM_PIN_TRIGGER
 }EPinTrigger;
 
 

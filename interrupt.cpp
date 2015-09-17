@@ -24,29 +24,79 @@
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**************************************************************************
+ * Include Files
+ **************************************************************************/
 #include "interrupt.h"
 #include "nrf_soc.h"
 #include "nrf_sdm.h"
+#include "assert.h"
 extern "C"{
 #include "app_error.h"
 }
 #include "app_util_platform.h"
 #include "nrf_gpiote.h"
 #include "inter_periph_com.h"
+#include "nrf51822_arduino_conversion.h"
 
-dynamic_handler_t pin_interrupterCB[4];
+/**************************************************************************
+ * Manifest Constants
+ **************************************************************************/
+#define NB_GPIOTE_CHANNELS (4U)
+#define MAX_NB_EXT_IT NB_GPIOTE_CHANNELS
 
-static uint32_t pin_for_inter[4] 			= {0xff, 0xff, 0xff, 0xff};
-static uint8_t inter_mode[4]			    = {0x00, 0x00, 0x00, 0x00};
+/**************************************************************************
+ * Type Definitions
+ **************************************************************************/
+typedef struct{
+	uint32_t u32_nrfPin;
+	EPinTrigger e_trigger;
+	ext_it_handler_t cb;
+	void* p_payload;
+}SExtInterrupt;
 
+/**************************************************************************
+ * Variables
+ **************************************************************************/
 static uint8_t softdevice_enabled;
+
+/**
+ * External IT, index = GPIOTE channel
+ */
+SExtInterrupt extIT[MAX_NB_EXT_IT] = {{INVALID_PIN, OUT_OF_ENUM_PIN_TRIGGER, NULL},
+		{INVALID_PIN, OUT_OF_ENUM_PIN_TRIGGER, NULL},
+		{INVALID_PIN, OUT_OF_ENUM_PIN_TRIGGER, NULL},
+		{INVALID_PIN, OUT_OF_ENUM_PIN_TRIGGER, NULL}};
+/**************************************************************************
+ * Macros
+ **************************************************************************/
+
+/**************************************************************************
+ * Global Functions
+ **************************************************************************/
+
+/**************************************************************************
+ * Local Functions
+ **************************************************************************/
+/***
+ * Enable GPIOTE interrupt on given channel (refer reference manual 14.2)
+ * @param arg_u8_gpioteChannel
+ */
+static void enableGPIOTEInterrupt( uint8_t arg_u8_gpioteChannel );
+
+/**
+ * Get GPIOTE channel mask corresponding to given channel
+ * @param arg_u8_gpioteChannel
+ * @return
+ */
+static uint32_t extItToGPIOTEChannelMask( uint8_t arg_u8_gpioteChannel );
 
 static void GPIOTE_handler( void );
 
-/**********************************************************************
-name :
-function : 
-**********************************************************************/
+/**************************************************************************
+ * Global Functions Definitions
+ **************************************************************************/
+
 void delay_ex_interrupter(uint32_t us) 
 {
 	while (us--)
@@ -65,313 +115,210 @@ void delay_ex_interrupter(uint32_t us)
     };
 }
 
-/**********************************************************************
-name :
-function : 
-**********************************************************************/
-void attachInterrupt(uint8_t pin, dynamic_handler_t event_handler, EPinTrigger pinTrigger)
+
+void attachInterrupt(uint32_t arg_u32_pin, ext_it_handler_t arg_pf_itHandler, EPinTrigger arg_e_pinTrigger, void* arg_p_handlerPayload)
 {
 	uint32_t nrf_pin, err_code = NRF_SUCCESS;
+	nrf_gpiote_polarity_t loc_e_gpiotePol = NRF_GPIOTE_POLARITY_TOGGLE;
 	uint8_t channel;
 	
-	channel = GPIOTE_Channel_Find();
+	channel = gpioteChannelFind();
 	if(channel == UNAVAILABLE_GPIOTE_CHANNEL)
 	{
+		assert(false);
 		return;
 	}
 	
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
-	if( nrf_pin < 31 &&  (pinTrigger ==RISING || pinTrigger == FALLING) && channel<4 )
-	{	
-		GPIOTE_Channel_Set(channel);
-		if(channel == 0)
-		{	
-			pin_interrupterCB[0] = event_handler;
-			pin_for_inter[0] = nrf_pin;
-			if( pinTrigger == RISING )
-			{	
-				inter_mode[0] = 0x01;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pulldown << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[0] =  (NRF_GPIOTE_POLARITY_LOTOHI << GPIOTE_CONFIG_POLARITY_Pos)
-										| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN0_Set << GPIOTE_INTENSET_IN0_Pos; 
-			}
-			else if( pinTrigger == FALLING )
-			{	
-				inter_mode[0] = 0x02;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pullup << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[0] =  (NRF_GPIOTE_POLARITY_HITOLO << GPIOTE_CONFIG_POLARITY_Pos)
-										| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN0_Set << GPIOTE_INTENSET_IN0_Pos; 				
-			}
-		}
-		else if(channel == 1)
-		{
-			pin_interrupterCB[1] = event_handler;
-			pin_for_inter[1] = nrf_pin;
-			if( pinTrigger == RISING )
-			{
-				inter_mode[1] = 0x01;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pulldown << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[1] =  (NRF_GPIOTE_POLARITY_LOTOHI << GPIOTE_CONFIG_POLARITY_Pos)
-											| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-											| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);	
-											
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN1_Set << GPIOTE_INTENSET_IN1_Pos;
-			}
-			else if( pinTrigger == FALLING )
-			{
-				inter_mode[1] = 0x02;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pullup << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[1] =  (NRF_GPIOTE_POLARITY_HITOLO << GPIOTE_CONFIG_POLARITY_Pos)
-										| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN1_Set << GPIOTE_INTENSET_IN1_Pos; 				
-			}					
-		}
-		else if(channel == 2)
-		{
-			pin_interrupterCB[2] = event_handler;
-			pin_for_inter[2] = nrf_pin;
-			if( pinTrigger == RISING )
-			{
-				inter_mode[2] = 0x01;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pulldown << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[2] =  (NRF_GPIOTE_POLARITY_LOTOHI << GPIOTE_CONFIG_POLARITY_Pos)
-											| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-											| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);	
-											
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN2_Set << GPIOTE_INTENSET_IN2_Pos;
-			}
-			else if( pinTrigger == FALLING )
-			{
-				inter_mode[2] = 0x02;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pullup << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[2] =  (NRF_GPIOTE_POLARITY_HITOLO << GPIOTE_CONFIG_POLARITY_Pos)
-										| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN2_Set << GPIOTE_INTENSET_IN2_Pos; 				
-			}
-		}
-		else if(channel == 3)
-		{
-			pin_interrupterCB[3] = event_handler;
-			pin_for_inter[3] = nrf_pin;
-			if( pinTrigger == RISING )
-			{
-				inter_mode[3] = 0x01;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pulldown << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[3] =  (NRF_GPIOTE_POLARITY_LOTOHI << GPIOTE_CONFIG_POLARITY_Pos)
-											| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-											| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);	
-											
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN3_Set << GPIOTE_INTENSET_IN3_Pos;
-			}
-			else if( pinTrigger == FALLING )
-			{
-				inter_mode[3] = 0x02;
-				NRF_GPIO->PIN_CNF[nrf_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-											| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-											| (GPIO_PIN_CNF_PULL_Pullup << GPIO_PIN_CNF_PULL_Pos)
-											| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-											| (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
-											
-				NRF_GPIOTE->CONFIG[3] =  (NRF_GPIOTE_POLARITY_HITOLO << GPIOTE_CONFIG_POLARITY_Pos)
-										| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)  
-										| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);							
-				NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN3_Set << GPIOTE_INTENSET_IN3_Pos; 				
-			}									
-			
-		}
+	nrf_pin = arduinoToVariantPin(arg_u32_pin);
+	assert(INVALID_PIN != nrf_pin);
 
-		/*
-		NRF_GPIOTE->INTENSET  = GPIOTE_INTENSET_IN0_Set << GPIOTE_INTENSET_IN0_Pos 
-								| GPIOTE_INTENSET_IN1_Set << GPIOTE_INTENSET_IN1_Pos
-								| GPIOTE_INTENSET_IN2_Set << GPIOTE_INTENSET_IN2_Pos		
-								| GPIOTE_INTENSET_IN3_Set << GPIOTE_INTENSET_IN3_Pos;
-		*/	
-		linkInterrupt(GPIOTE_IRQn, GPIOTE_handler);
-		
-		err_code = sd_softdevice_is_enabled(&softdevice_enabled);
-		APP_ERROR_CHECK(err_code);
-		if(softdevice_enabled == 0)
-		{	
-			NVIC_SetPriority(GPIOTE_IRQn, APP_IRQ_PRIORITY_LOW);
-			NVIC_EnableIRQ(GPIOTE_IRQn);
-		}
-		else
-		{
-			err_code = sd_nvic_SetPriority(GPIOTE_IRQn, APP_IRQ_PRIORITY_LOW);
-			APP_ERROR_CHECK(err_code);
-			err_code = sd_nvic_EnableIRQ(GPIOTE_IRQn);
-			APP_ERROR_CHECK(err_code);
-		}
-	}
-}
-/**********************************************************************
-name :
-function : 
-**********************************************************************/
-void detachInterrupt(uint32_t pin )
-{	
-	uint32_t nrf_pin, err_code = NRF_SUCCESS;
-	uint8_t channel;
-	//Get the GPIOTE Channel
-	nrf_pin = Pin_nRF51822_to_Arduino(pin);
-	if(nrf_pin == pin_for_inter[0])
-	{
-		channel = 0;
-	}
-	else if( nrf_pin == pin_for_inter[1] ) 
-	{
-		channel = 1;
-	}
-	else if( nrf_pin == pin_for_inter[2] ) 
-	{
-		channel = 2;
-	}
-	else if( nrf_pin == pin_for_inter[3] ) 
-	{
-		channel = 3;
+	loc_e_gpiotePol = pinTriggerToNRF51GPIOTEPol(arg_e_pinTrigger);
+	gpioteChannelSet(channel);
+	extIT[channel].u32_nrfPin = nrf_pin;
+	extIT[channel].e_trigger = arg_e_pinTrigger;
+	extIT[channel].cb = arg_pf_itHandler;
+	extIT[channel].p_payload = arg_p_handlerPayload;
+	NRF_GPIOTE->CONFIG[channel] =  (loc_e_gpiotePol << GPIOTE_CONFIG_POLARITY_Pos)
+							| (nrf_pin << GPIOTE_CONFIG_PSEL_Pos)
+							| (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos);
+	enableGPIOTEInterrupt(channel);
+	IntController_linkInterrupt(GPIOTE_IRQn, GPIOTE_handler);
+
+	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+	APP_ERROR_CHECK(err_code);
+	if(softdevice_enabled == 0)
+	{	
+		NVIC_SetPriority(GPIOTE_IRQn, APP_IRQ_PRIORITY_LOW);
+		NVIC_EnableIRQ(GPIOTE_IRQn);
 	}
 	else
 	{
-		channel = 255;
-	}
-	//check right or wrong
-	if(nrf_pin < 31 && channel<4)
-	{
-		GPIOTE_Channel_Clean(channel);
-		inter_mode[channel] = 0x00;
-		pin_for_inter[channel] = 0xff;
-		//if all interrupt detach, disable GPIOTE_IRQn
-		if( pin_for_inter[0] == 0xFF && pin_for_inter[1] == 0xFF && pin_for_inter[2] == 0xFF && pin_for_inter[3] == 0xFF )
-		{	
-			err_code = sd_softdevice_is_enabled(&softdevice_enabled);
-			APP_ERROR_CHECK(err_code);
-			if(softdevice_enabled == 0)
-			{
-				NVIC_DisableIRQ(GPIOTE_IRQn);
-			}
-			else
-			{
-				err_code = sd_nvic_DisableIRQ(GPIOTE_IRQn);
-				APP_ERROR_CHECK(err_code);
-			}
-			unlinkInterrupt(GPIOTE_IRQn);
-		}
+		err_code = sd_nvic_SetPriority(GPIOTE_IRQn, APP_IRQ_PRIORITY_LOW);
+		APP_ERROR_CHECK(err_code);
+		err_code = sd_nvic_EnableIRQ(GPIOTE_IRQn);
+		APP_ERROR_CHECK(err_code);
 	}
 }
 
-/**********************************************************************
-name :
-function : 
-**********************************************************************/
+
+void detachInterrupt(uint32_t arg_u32_pin )
+{	
+	uint32_t loc_u32_pin, err_code = NRF_SUCCESS;
+	uint8_t loc_u8_channel = UNAVAILABLE_GPIOTE_CHANNEL;
+	uint8_t loc_u8_gpioteChannel;
+
+	//Get the GPIOTE Channel
+	loc_u32_pin = arduinoToVariantPin(arg_u32_pin);
+	assert(INVALID_PIN != loc_u32_pin);
+	
+	for(loc_u8_gpioteChannel = 0; loc_u8_gpioteChannel < MAX_NB_EXT_IT; loc_u8_gpioteChannel++)
+	{
+		if(loc_u32_pin == extIT[loc_u8_gpioteChannel].u32_nrfPin)
+		{
+			loc_u8_channel = loc_u8_gpioteChannel;
+			break;
+		}
+	}
+	if(loc_u8_channel == UNAVAILABLE_GPIOTE_CHANNEL){
+		/** interrupt already detached ? */
+		assert(false);
+		return;
+	}
+	
+	gpioteChannelClean(loc_u8_channel);
+	extIT[loc_u8_channel].e_trigger = OUT_OF_ENUM_PIN_TRIGGER;
+	extIT[loc_u8_channel].u32_nrfPin = INVALID_PIN;
+	extIT[loc_u8_channel].cb = NULL;
+	extIT[loc_u8_channel].p_payload = NULL;
+
+	//if all interrupt detach, disable GPIOTE_IRQn
+	loc_u8_gpioteChannel = 0;
+	while((loc_u8_gpioteChannel < MAX_NB_EXT_IT)
+			&& (extIT[loc_u8_gpioteChannel].u32_nrfPin == INVALID_PIN))
+	{
+		loc_u8_gpioteChannel++;
+	}
+
+	if(loc_u8_gpioteChannel == MAX_NB_EXT_IT)
+	{
+		err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+		APP_ERROR_CHECK(err_code);
+		if(softdevice_enabled == 0)
+		{
+			NVIC_DisableIRQ(GPIOTE_IRQn);
+		}
+		else
+		{
+			err_code = sd_nvic_DisableIRQ(GPIOTE_IRQn);
+			APP_ERROR_CHECK(err_code);
+		}
+		IntController_unlinkInterrupt(GPIOTE_IRQn);
+	}
+}
+
+/**************************************************************************
+ * Local Functions Definitions
+ **************************************************************************/
+void enableGPIOTEInterrupt( uint8_t arg_u8_gpioteChannel )
+{
+	if(arg_u8_gpioteChannel == 0)
+	{
+		NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN0_Set << GPIOTE_INTENSET_IN0_Pos;
+	}
+	else if(arg_u8_gpioteChannel == 1)
+	{
+		NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN1_Set << GPIOTE_INTENSET_IN1_Pos;
+	}
+	else if(arg_u8_gpioteChannel == 2)
+	{
+		NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN2_Set << GPIOTE_INTENSET_IN2_Pos;
+	}
+	else if(arg_u8_gpioteChannel == 3)
+	{
+		NRF_GPIOTE->INTENSET |= GPIOTE_INTENSET_IN3_Set << GPIOTE_INTENSET_IN3_Pos;
+	}
+	else
+	{
+		/** invalid channel given */
+		assert(false);
+	}
+}
+
+uint32_t extItToGPIOTEChannelMask( uint8_t arg_u8_gpioteChannel )
+{
+	uint32_t loc_u32_mask = 0;
+	if(arg_u8_gpioteChannel == 0)
+	{
+		loc_u32_mask = GPIOTE_INTENSET_IN0_Msk;
+	}
+	else if(arg_u8_gpioteChannel == 1)
+	{
+		loc_u32_mask = GPIOTE_INTENSET_IN1_Msk;
+	}
+	else if(arg_u8_gpioteChannel == 2)
+	{
+		loc_u32_mask = GPIOTE_INTENSET_IN2_Msk;
+	}
+	else if(arg_u8_gpioteChannel == 3)
+	{
+		loc_u32_mask = GPIOTE_INTENSET_IN3_Msk;
+	}
+	else
+	{
+		assert(false);
+	}
+	return loc_u32_mask;
+
+}
+
 //void GPIOTE_IRQHandler(void)
 static void GPIOTE_handler( void )
 {	
-	uint32_t index_s , index_x;
+	uint8_t loc_u8_gpioteChannel = 0;
 	
-	delay_ex_interrupter(30000); 
 
-	for(index_x=0; index_x<4; index_x++)
+	//TODO RP 26/01/2015- check it?
+	//delay_ex_interrupter(30000);
+
+	for(loc_u8_gpioteChannel = 0; loc_u8_gpioteChannel < MAX_NB_EXT_IT; loc_u8_gpioteChannel++)
 	{
-		if(pin_for_inter[index_x] != 0xFF)
+		if((extIT[loc_u8_gpioteChannel].u32_nrfPin != INVALID_PIN)
+				&& (extItToGPIOTEChannelMask(loc_u8_gpioteChannel) & NRF_GPIOTE->INTENSET)
+				&& (NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] == 1))
 		{	
-			index_s = pin_for_inter[index_x];
-			if(inter_mode[index_x] == 0x01)
+			if(extIT[loc_u8_gpioteChannel].e_trigger == RISING)
 			{
-				if( NRF_GPIOTE->EVENTS_IN[index_x] == 1 && ( ((NRF_GPIO->IN >> index_s)&1UL) == 1)  )
+				if(((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL) == 1  )
 				{
-					NRF_GPIOTE->EVENTS_IN[index_x] = 0;
-					pin_interrupterCB[index_x]();
+					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
+					extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 				}
 				else
 				{
-					NRF_GPIOTE->EVENTS_IN[index_x] = 0;
+					/** invalid interrupt triggered */
+					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
 				}
 			}
-			else if( inter_mode[index_x] == 0x02 )
+			else if( extIT[loc_u8_gpioteChannel].e_trigger == FALLING )
 			{
-				if( NRF_GPIOTE->EVENTS_IN[index_x] == 1 && ( ((NRF_GPIO->IN >> index_s)&1UL) == 0)  )
+				if(((NRF_GPIO->IN >> extIT[loc_u8_gpioteChannel].u32_nrfPin) & 1UL) == 0  )
 				{
-					NRF_GPIOTE->EVENTS_IN[index_x] = 0;
-					pin_interrupterCB[index_x]();
+					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
+					extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 				}
 				else
 				{
-					NRF_GPIOTE->EVENTS_IN[index_x] = 0;
+					/** invalid interrupt triggered */
+					NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
 				}		
+			}
+			else /** CHANGE */
+			{
+				NRF_GPIOTE->EVENTS_IN[loc_u8_gpioteChannel] = 0;
+				extIT[loc_u8_gpioteChannel].cb(extIT[loc_u8_gpioteChannel].p_payload);
 			}
 		}
 	}
-	/*
-	if(pin_for_inter[1] != 0xFF)
-	{	simple_uart_putstring("here \r\n");
-		index_s = pin_for_inter[1];
-		if(inter_mode[1] == 0x01)
-		{
-			if( NRF_GPIOTE->EVENTS_IN[1] == 1 && (NRF_GPIOTE->INTENSET & GPIOTE_INTENSET_IN1_Msk) && ( ((NRF_GPIO->IN >> index_s)&1UL) == 1)  )
-			{   simple_uart_putstring("here2 \r\n");
-				NRF_GPIOTE->EVENTS_IN[1] = 0;
-				pin_interrupterCB[1]();
-			}
-			else
-			{
-				NRF_GPIOTE->EVENTS_IN[1] = 0;
-			}
-		}
-		else if( inter_mode[1] == 0x02 )
-		{   simple_uart_putstring("here3 \r\n");
-			if( NRF_GPIOTE->EVENTS_IN[1] == 1 && (NRF_GPIOTE->INTENSET & GPIOTE_INTENSET_IN1_Msk) && ( ((NRF_GPIO->IN >> index_s)&1UL) == 0)  )
-			{
-				NRF_GPIOTE->EVENTS_IN[1] = 0;
-				pin_interrupterCB[1]();
-			}
-			else
-			{
-				NRF_GPIOTE->EVENTS_IN[1] = 0;
-			}		
-		}
-	}	
-	*/
 }
 
 

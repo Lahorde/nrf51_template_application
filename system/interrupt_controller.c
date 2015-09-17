@@ -18,6 +18,8 @@
 #include <stddef.h>
 #include "interrupt_controller.h"
 #include "nrf_soc.h"
+#include "nrf_sdm.h"
+#include "app_error.h"
 
 /**************************************************************************
  * Manifest Constants
@@ -78,6 +80,41 @@ dynamic_handler_t *dynamic_handlers = &exception_handlers[NB_CORTEX_CORE_EXCEPTI
 /**************************************************************************
  * Global Functions
  **************************************************************************/
+bool IntController_enableIRQ(IRQn_Type arg_IRQn, uint32_t arg_priority)
+{
+	uint8_t softdevice_enabled;
+	uint32_t err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+	APP_ERROR_CHECK(err_code);
+	if(softdevice_enabled == 0)
+	{	NVIC_ClearPendingIRQ(arg_IRQn);
+		NVIC_SetPriority(arg_IRQn, arg_priority);
+		NVIC_EnableIRQ(arg_IRQn);
+	}
+	else
+	{
+		err_code = sd_nvic_ClearPendingIRQ(arg_IRQn);
+		if(err_code != NRF_SUCCESS)
+		{
+			APP_ERROR_CHECK(err_code);
+			return false;
+		}
+
+		err_code = sd_nvic_SetPriority(arg_IRQn, arg_priority);
+		if(err_code != NRF_SUCCESS)
+		{
+			APP_ERROR_CHECK(err_code);
+			return false;
+		}
+
+		err_code = sd_nvic_EnableIRQ(arg_IRQn);
+		if(err_code != NRF_SUCCESS)
+		{
+			APP_ERROR_CHECK(err_code);
+			return false;
+		}
+	}
+	return true;
+}
 
 void IntController_linkInterrupt( uint8_t IRQn, dynamic_handler_t handler)
 {

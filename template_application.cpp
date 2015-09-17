@@ -25,6 +25,7 @@
 #include "events.h"
 #include "button.h"
 #include "pinout.h"
+#include "flash_memory.h"
 
 /**************************************************************************
  * Manifest Constants
@@ -69,6 +70,8 @@ static bool ledOn = false;
  * Global Functions
  **************************************************************************/
 
+extern uint32_t __etext;
+
 void application_setup(void){
 	BLETransceiver::Error loc_error;
 
@@ -79,6 +82,13 @@ void application_setup(void){
 	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
 	LOG_INFO_LN("remaining stack = %l", MemoryWatcher::getRemainingStack());
 	MemoryWatcher::paintStackNow();
+
+	/** try to read from flash */
+	int8_t test = FlashMem.read(int(&__etext+1));
+	LOG_INFO_LN("\nvalue read = %d" , test);
+	int8_t valuetowrite = micros() & 0xFF;
+	LOG_INFO_LN("\nvalue to write = %d" , micros() & 0xFF);
+	FlashMem.write(int(&__etext+1), valuetowrite);
 
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();

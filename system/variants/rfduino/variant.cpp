@@ -12,18 +12,21 @@
  * TODO_revision history
  *****************************************************************************/
 #include "variant.h"
-#include "assert.h"
+extern "C"{
+#include "app_error.h"
+}
 
 uint32_t arduinoToVariantPin(uint32_t arg_u32_pin)
 {
 	/** check pin */
-	if(0 < arg_u32_pin && arg_u32_pin < PINS_COUNT)
+	if(0 <= arg_u32_pin && arg_u32_pin < PINS_COUNT)
 	{
 		return arg_u32_pin;
 	}
 	else
 	{
 		/** bad pin given */
+		APP_ERROR_CHECK_BOOL(false);
 		return INVALID_PIN;
 	}
 }

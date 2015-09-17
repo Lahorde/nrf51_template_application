@@ -96,7 +96,8 @@ extern "C" {
  */
 #define PIN_WIRE_SDA         (6u)
 #define PIN_WIRE_SCL         (5u)
-#define WIRE_INTERFACE       NRF_TWI1
+#define WIRE_INTERFACE_0       NRF_TWI0
+#define WIRE_INTERFACE_1       NRF_TWI1
 
 /*
  * Analog pins

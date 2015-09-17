@@ -33,9 +33,17 @@
 /**************************************************************************
  * Variables
  **************************************************************************/
-uint16_t PPI_Channels_Occupied[4][2] = {{255, 255}, {255, 255}, {255, 255}, {255, 255}}; 	//Save PPI channel number, each GPIOTE channel takes up two PPI channels
-uint8_t GPIOTE_Channels_Occupied[4]  = {UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL}; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
-uint8_t GPIOTE_Channel_for_Analog[3] = {UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL, UNAVAILABLE_GPIOTE_CHANNEL};				  				//Save the Channel number used by PWM,
+uint16_t PPI_Channels_Occupied[4][2] = {{UNAVAILABLE_PPI_CHANNEL, UNAVAILABLE_PPI_CHANNEL},
+		{UNAVAILABLE_PPI_CHANNEL, UNAVAILABLE_PPI_CHANNEL},
+		{UNAVAILABLE_PPI_CHANNEL, UNAVAILABLE_PPI_CHANNEL},
+		{UNAVAILABLE_PPI_CHANNEL, UNAVAILABLE_PPI_CHANNEL}}; 	//Save PPI channel number, each GPIOTE channel takes up two PPI channels
+uint8_t GPIOTE_Channels_Occupied[4]  = {UNAVAILABLE_GPIOTE_CHANNEL,
+		UNAVAILABLE_GPIOTE_CHANNEL,
+		UNAVAILABLE_GPIOTE_CHANNEL,
+		UNAVAILABLE_GPIOTE_CHANNEL}; 			  				//GPIOTE channel Status, 1--have occupied, 255--not occupied
+uint8_t GPIOTE_Channel_for_Analog[3] = {UNAVAILABLE_GPIOTE_CHANNEL,
+		UNAVAILABLE_GPIOTE_CHANNEL,
+		UNAVAILABLE_GPIOTE_CHANNEL};				  				//Save the Channel number used by PWM,
 uint8_t Timer1_Occupied_Pin[3] = {255, 255, 255}; 				      				//the pin which used for analogWrite
 
 /**************************************************************************
@@ -45,6 +53,10 @@ uint8_t Timer1_Occupied_Pin[3] = {255, 255, 255}; 				      				//the pin which 
 /**************************************************************************
  * Local Functions
  **************************************************************************/
+/** Enable given ppi channel
+ * @param channel_num
+ */
+void enablePPIChannel(uint8_t channel_num);
 
 /**************************************************************************
  * Global Functions
@@ -68,59 +80,117 @@ uint8_t gpioteChannelFind()
 
 	return UNAVAILABLE_GPIOTE_CHANNEL;
 }
-/**********************************************************************
-name :
-function :
-**********************************************************************/
+
 void gpioteChannelSet(uint8_t channel)
 {
 	GPIOTE_Channels_Occupied[channel] = 1;
 }
-/**********************************************************************
-name :
-function :
-**********************************************************************/
+
 void gpioteChannelClean(uint8_t channel)
 {
 	nrf_gpiote_unconfig(channel);
 	GPIOTE_Channels_Occupied[channel] = UNAVAILABLE_GPIOTE_CHANNEL;
 }
 
-/**********************************************************************
-name :
-function : find free PPI channel
-**********************************************************************/
-int find_free_PPI_channel(int exclude_channel)
+uint8_t findFreePPIChannel(uint8_t exclude_channel)
 {
 	uint32_t err_code = NRF_SUCCESS, chen;
 	uint8_t  softdevice_enabled;
-	int start = 0;
-	int end = 8;
-	int i;
+	uint8_t channelIndex = 0;
+	/** Refer S110 Sift Device Specification 10.4 */
+	uint8_t nbAppPPIChannels = 0;
 
 	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
 	APP_ERROR_CHECK(err_code);
 	if(softdevice_enabled == 0)
 	{
 		chen = NRF_PPI->CHEN;
+		nbAppPPIChannels = NB_PPI_APP_CHANNELS_SD_DISABLED;
 	}
 	else
 	{
 		err_code = sd_ppi_channel_enable_get(&chen);
 		APP_ERROR_CHECK(err_code);
+		nbAppPPIChannels = NB_PPI_APP_CHANNELS_SD_ENABLED;
 	}
-	for (i = start; i < end; i++)
+	for (; channelIndex < nbAppPPIChannels; channelIndex++)
 	{
-		//if (! (NRF_PPI->CHEN & (1 << i)))
-		if(! ( chen & (1 << i) ) )
+		if(! ( chen & (1 << channelIndex) ) )
 		{
-			if (i != exclude_channel)
+			if (channelIndex != exclude_channel)
 			{
-				return i;
+				return channelIndex;
 			}
 		}
 	}
-	return 255;
+	return UNAVAILABLE_PPI_CHANNEL;
+}
+
+uint32_t wirePPIChannel(uint8_t channel_num, const volatile void * evt_endpoint, const volatile void * task_endpoint)
+{
+	uint32_t err_code = NRF_SUCCESS;
+	uint8_t  softdevice_enabled;
+
+	APP_ERROR_CHECK_BOOL(channel_num != UNAVAILABLE_PPI_CHANNEL
+			&& channel_num < NB_PPI_APP_CHANNELS_SD_DISABLED);
+
+	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+	APP_ERROR_CHECK(err_code);
+	if (softdevice_enabled == 0 )
+	{
+		NRF_PPI->CH[channel_num].EEP	=	(uint32_t)evt_endpoint;
+		NRF_PPI->CH[channel_num].TEP  =	(uint32_t)task_endpoint;
+		enablePPIChannel(channel_num);
+	}
+	else
+	{
+		err_code = sd_ppi_channel_assign(channel_num, evt_endpoint, task_endpoint);
+		APP_ERROR_CHECK(err_code);
+		enablePPIChannel(channel_num);
+	}
+	return 0;
+}
+
+void enablePPIChannel(uint8_t channel_num)
+{
+	uint32_t err_code = NRF_SUCCESS;
+	uint8_t  softdevice_enabled;
+
+	APP_ERROR_CHECK_BOOL(channel_num != UNAVAILABLE_PPI_CHANNEL
+			&& channel_num < NB_PPI_APP_CHANNELS_SD_DISABLED);
+
+	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+	APP_ERROR_CHECK(err_code);
+	if (softdevice_enabled == 0)
+	{
+		NRF_PPI->CHEN |= (1 << channel_num);
+	}
+	else
+	{
+		err_code = sd_ppi_channel_enable_set(1 << channel_num);
+		APP_ERROR_CHECK(err_code);
+	}
+}
+
+uint32_t freePPIChannel(uint8_t channel_num)
+{
+	uint32_t err_code = NRF_SUCCESS;
+	uint8_t  softdevice_enabled;
+
+	APP_ERROR_CHECK_BOOL(channel_num != UNAVAILABLE_PPI_CHANNEL
+			&& channel_num < NB_PPI_APP_CHANNELS_SD_DISABLED);
+
+	err_code = sd_softdevice_is_enabled(&softdevice_enabled);
+	APP_ERROR_CHECK(err_code);
+	if (softdevice_enabled == 0)
+	{
+		NRF_PPI->CHEN &= ~(1 << channel_num);
+	}
+	else
+	{
+		err_code = sd_ppi_channel_enable_clr(1 << channel_num);
+		APP_ERROR_CHECK(err_code);
+	}
 }
 
 /**********************************************************************

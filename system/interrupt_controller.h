@@ -17,6 +17,7 @@
 /**************************************************************************
  * Include Files
  **************************************************************************/
+#include <stdbool.h>
 #include "nrf51.h"
 
 #ifdef __cplusplus
@@ -35,8 +36,13 @@ typedef void (*dynamic_handler_t)(void);
 /**************************************************************************
  * Global Functions Declarations
  **************************************************************************/
+bool IntController_enableIRQ(IRQn_Type arg_IRQn, uint32_t arg_priority);
+
 void IntController_linkInterrupt( uint8_t IRQn, dynamic_handler_t handler);
+
 void IntController_unlinkInterrupt( uint8_t IRQn );
+
+
 
 #ifdef __cplusplus
 }

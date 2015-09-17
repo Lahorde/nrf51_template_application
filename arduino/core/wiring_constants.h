@@ -1,7 +1,7 @@
-
-
 #ifndef _WIRING_CONSTANTS_
 #define _WIRING_CONSTANTS_
+
+#include "nrf_soc.h"
 
 #ifdef __cplusplus
 extern "C"{

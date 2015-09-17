@@ -39,6 +39,7 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  * It defines following symbols, which code can use without definition:
  *   __exidx_start
  *   __exidx_end
+ *   __sfixed
  *   __etext
  *   __data_start__
  *   __preinit_array_start
@@ -51,7 +52,6 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  *   __bss_start__
  *   __bss_end__
  *   __end__
- *   end
  *   __HeapLimit
  *   __StackLimit
  *   __StackTop
@@ -63,6 +63,8 @@ SECTIONS
 {
 	.text :
 	{
+		. = ALIGN(4);
+        _sfixed = .;
 		KEEP(*(.Vectors))
 		*(.text*)
 
@@ -99,8 +101,9 @@ SECTIONS
 	{
 		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
 	} > FLASH
+	
+	. = ALIGN(4);
 	__exidx_end = .;
-
 	__etext = .;
 		
 	.data : AT (__etext)

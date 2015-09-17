@@ -6,7 +6,7 @@ echo running project .gdbinit\n
 #echo make flash\n
 #     shell make flash &
 echo JLinkGDBServer -Device nrf51822 -If SWD -speed 10000\n
-     #shell sleep 2
-     #shell JLinkGDBServer -Device nrf51822 -If SWD -speed 10000 &
+     shell sleep 2
+     shell JLinkGDBServer -Device nrf51822 -If SWD -speed 10000 &
 
 

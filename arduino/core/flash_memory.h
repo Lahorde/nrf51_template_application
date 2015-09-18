@@ -26,8 +26,10 @@
 class FlashMemory
 {
 public:
-	int8_t read(int);
+	int8_t readLong(int, int32_t&);
+	int8_t read(int, int8_t&);
 	int8_t write(int, uint8_t);
+	int8_t writeLong(int, int32_t);
 };
 
 extern FlashMemory FlashMem;

@@ -28,14 +28,27 @@ extern uint32_t __etext;
 // multiple the page by 1024
 #define  ADDRESS_OF_PAGE(page)  ((uint32_t*)(page << 10))
 
-int8_t FlashMemory::read(int address)
+int8_t FlashMemory::readLong(int address, int32_t& value)
+{
+	value = 0;
+	if((uint32_t*) address <= &__etext)
+	{
+		/** writing in application code */
+		return -1;
+	}
+	value = (*(uint32_t*)address);
+	return sizeof(value);
+}
+
+int8_t FlashMemory::read(int address, int8_t& value)
 {
 	if((uint32_t*) address <= &__etext)
 	{
 		/** writing in application code */
 		return -1;
 	}
-	return (*(uint32_t*)address) & 0xFF;
+	value = (*(uint32_t*)address) & 0xFF;
+	return sizeof(value);
 }
 
 int8_t FlashMemory::write(int address, uint8_t value)
@@ -49,6 +62,21 @@ int8_t FlashMemory::write(int address, uint8_t value)
 	}
 
 	err_code = ble_flash_word_write((uint32_t*)address, (uint32_t) value);
+	APP_ERROR_CHECK(err_code);
+	return sizeof(value);
+}
+
+int8_t FlashMemory::writeLong(int address, int32_t value)
+{
+	uint32_t err_code = NRF_SUCCESS;
+
+	if((uint32_t*) address <= &__etext)
+	{
+		/** writing in application code */
+		return -1;
+	}
+
+	err_code = ble_flash_word_write((uint32_t*)address, value);
 	APP_ERROR_CHECK(err_code);
 	return sizeof(value);
 }

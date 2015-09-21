@@ -343,7 +343,7 @@ void BLETransceiver::bleEvtDispatch(ble_evt_t * p_ble_evt)
 {
 	ble_conn_params_on_ble_evt(p_ble_evt);
 	ble_nus_on_ble_evt(&nus, p_ble_evt);
-	onBleEvt(p_ble_evt);
+	getInstance()->onBleEvt(p_ble_evt);
 }
 
 void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)

@@ -159,6 +159,13 @@ public:
 	 */
 	void stopRSSIMeasure(void);
 
+protected:
+	/**@brief Function for handling the Application's BLE Stack events.
+	 *
+	 * @param[in]   p_ble_evt   Bluetooth stack event.
+	 */
+	virtual void onBleEvt(ble_evt_t * p_ble_evt);
+
 private :
 
 	/**@brief Function for initializing the BLE stack.

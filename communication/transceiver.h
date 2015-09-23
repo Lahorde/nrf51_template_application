@@ -28,7 +28,7 @@ class ITransceiver {
 public:
 	typedef int8_t Error;
 	static const int8_t NO_ERROR = 0;
-	static const int8_t GENERAL_ERROR = 1;
+	static const int8_t GENERAL_ERROR = -1;
 	static const int8_t LAST_ERROR_CODE = GENERAL_ERROR;
 
 public:

@@ -26,6 +26,11 @@
 #include "button.h"
 #include "pinout.h"
 #include "flash_memory.h"
+#include "persistent_object.h"
+
+extern "C"{
+#include "ble_flash.h"
+}
 
 /**************************************************************************
  * Manifest Constants
@@ -83,13 +88,6 @@ void application_setup(void){
 	LOG_INFO_LN("remaining stack = %l", MemoryWatcher::getRemainingStack());
 	MemoryWatcher::paintStackNow();
 
-	/** try to read from flash */
-	int8_t test = FlashMem.read(int(&__etext+1));
-	LOG_INFO_LN("\nvalue read = %d" , test);
-	int8_t valuetowrite = micros() & 0xFF;
-	LOG_INFO_LN("\nvalue to write = %d" , micros() & 0xFF);
-	FlashMem.write(int(&__etext+1), valuetowrite);
-
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();
 
@@ -99,7 +97,7 @@ void application_setup(void){
 	 /** Add led */
 	pinMode(LED_1_OUTPUT_PIN, OUTPUT);
 
-	BLETransceiver::getInstance()->addListener(&btListener);
+	BLETransceiver::getInstance()->registerListener(&btListener);
 	loc_error = BLETransceiver::getInstance()->advertise();
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_ERROR("Error %d when launching advertisement", loc_error);

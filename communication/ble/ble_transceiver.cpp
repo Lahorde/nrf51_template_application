@@ -61,16 +61,16 @@ BLETransceiver::~BLETransceiver()
 {
 	if(p_transceiverListener != NULL)
 	{
-		removeListener(p_transceiverListener);
+		unregisterListener(p_transceiverListener);
 	}
 	b_isAdvertising = false;
 }
 
-void BLETransceiver::addListener(IBleTransceiverListener* arg_p_transceiverListener)
+void BLETransceiver::registerListener(IBleTransceiverListener* arg_p_transceiverListener)
 {
 	p_transceiverListener = arg_p_transceiverListener;
 }
-void BLETransceiver::removeListener(IBleTransceiverListener* arg_p_transceiverListener)
+void BLETransceiver::unregisterListener(IBleTransceiverListener* arg_p_transceiverListener)
 {
 	p_transceiverListener = arg_p_transceiverListener;
 }
@@ -436,6 +436,14 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 	}
 }
 
+void BLETransceiver::dataReceived(uint8_t * p_data, uint16_t length)
+{
+	if(getInstance()->p_transceiverListener)
+	{
+		getInstance()->p_transceiverListener->onDataReceived(length, p_data);
+	}
+}
+
 void BLETransceiver::secParamsInit(void)
 {
 	secParams.timeout      = SEC_PARAM_TIMEOUT;
@@ -460,10 +468,8 @@ void BLETransceiver::onConnParamsEvt(ble_conn_params_evt_t * p_evt)
 
 void BLETransceiver::onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
-	if(getInstance()->p_transceiverListener)
-	{
-		getInstance()->p_transceiverListener->onDataReceived(length, p_data);
-	}
+	/** data handled in non static method */
+	getInstance()->dataReceived(p_data, length);
 }
 
 void BLETransceiver::connParamsErrorHandler(uint32_t nrf_error)

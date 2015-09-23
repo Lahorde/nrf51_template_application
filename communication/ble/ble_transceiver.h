@@ -31,10 +31,12 @@ extern "C"{
 class BLETransceiver : public ITransceiver{
 public:
 	/** Error Codes */
-	static const int8_t TX_BUFFER_FULL = ITransceiver::LAST_ERROR_CODE + 1;
-	static const int8_t INVALID_STATE = TX_BUFFER_FULL + 1;
+	static const int8_t TX_BUFFER_FULL = ITransceiver::LAST_ERROR_CODE - 1;
+	static const int8_t RX_BUFFER_EMPTY = TX_BUFFER_FULL - 1;
+	static const int8_t INVALID_STATE = RX_BUFFER_EMPTY - 1;
 	/** Try to send an object not handled in ble service */
-	static const int8_t INVALID_PROFILE_ATTRIBUTE = INVALID_STATE + 1;
+	static const int8_t INVALID_PROFILE_ATTRIBUTE = INVALID_STATE - 1;
+	static const int8_t LAST_ERROR_CODE = INVALID_PROFILE_ATTRIBUTE;
 
 private :
 	/** The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
@@ -95,8 +97,8 @@ private :
 public:
 	BLETransceiver(void);
 	~BLETransceiver();
-	void addListener(IBleTransceiverListener* arg_p_transceiverListener);
-	void removeListener(IBleTransceiverListener* arg_p_transceiverListener);
+	void registerListener(IBleTransceiverListener* arg_p_transceiverListener);
+	void unregisterListener(IBleTransceiverListener* arg_p_transceiverListener);
 	static BLETransceiver* getInstance(void);
 
 	/**
@@ -166,6 +168,14 @@ protected:
 	 */
 	virtual void onBleEvt(ble_evt_t * p_ble_evt);
 
+	/**@brief    Function for handling the data from the Nordic UART Service.
+	 *
+	 * @details  This function will process the data received from the Nordic UART BLE Service and send
+	 *           it to the UART module.
+	 */
+	/**@snippet [Handling the data received over BLE] */
+	virtual void dataReceived(uint8_t * p_data, uint16_t length);
+
 private :
 
 	/**@brief Function for initializing the BLE stack.
@@ -214,12 +224,6 @@ private :
 	 * @param[in]   nrf_error   Error code containing information about what went wrong.
 	 */
 	static void connParamsErrorHandler(uint32_t nrf_error);
-
-	/**@brief Function for handling the Application's BLE Stack events.
-	 *
-	 * @param[in]   p_ble_evt   Bluetooth stack event.
-	 */
-	static void onBleEvt(ble_evt_t * p_ble_evt);
 
 	/**@brief    Function for handling the data from the Nordic UART Service.
 	 *

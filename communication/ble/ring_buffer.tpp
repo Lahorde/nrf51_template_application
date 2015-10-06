@@ -12,8 +12,8 @@
  * TODO_revision history
  *****************************************************************************/
 #include <assert.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 template <class T>
 RingBuffer<T>::RingBuffer(uint16_t arg_u16_bufferSize) :

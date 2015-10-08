@@ -92,14 +92,11 @@ private :
 	/** 1 single listener handled */
 	IBleTransceiverListener* p_transceiverListener;
 
-	/** singleton */
-	static BLETransceiver instance;
 public:
 	BLETransceiver(void);
 	~BLETransceiver();
 	void registerListener(IBleTransceiverListener* arg_p_transceiverListener);
 	void unregisterListener(IBleTransceiverListener* arg_p_transceiverListener);
-	static BLETransceiver* getInstance(void);
 
 	/**
 	 * Initialize transceiver with needed BLE services
@@ -213,7 +210,7 @@ private :
 	 *
 	 * @param[in]   p_ble_evt   Bluetooth stack event.
 	 */
-	static void bleEvtDispatch(ble_evt_t * p_ble_evt);
+	static void bleEvtDispatch(ble_evt_t * p_ble_evt, BLETransceiver* me);
 
 	/**@brief Function for initializing security parameters.
 	 */
@@ -231,7 +228,7 @@ private :
 	 *           it to the UART module.
 	 */
 	/**@snippet [Handling the data received over BLE] */
-	static void onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
+	static void onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length, BLETransceiver* me);
 
 	/**@brief Function for handling the Connection Parameters Module.
 	 *

@@ -51,9 +51,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define BLE_UUID_NUS_SERVICE            0x08AC                       /**< The UUID of the Nordic UART Service. */
-#define BLE_UUID_NUS_TX_CHARACTERISTIC  0x08AD                       /**< The UUID of the TX Characteristic. */
-#define BLE_UUID_NUS_RX_CHARACTERISTIC  0x08AE                       /**< The UUID of the RX Characteristic. */
+#define BLE_UUID_NUS_SERVICE            0x0001                       /**< The UUID of the Nordic UART Service. */
+#define BLE_UUID_NUS_TX_CHARACTERISTIC  0x0002                       /**< The UUID of the TX Characteristic. */
+#define BLE_UUID_NUS_RX_CHARACTERISTIC  0x0003                       /**< The UUID of the RX Characteristic. */
 
 #define BLE_NUS_MAX_DATA_LEN            (GATT_MTU_SIZE_DEFAULT - 3)  /**< Maximum length of data (in bytes) that can be transmitted by the Nordic UART service module to the peer. */
 
@@ -64,7 +64,11 @@
 typedef struct ble_nus_s ble_nus_t;
 
 /**@brief Nordic UART Service event handler type. */
-typedef void (*ble_nus_data_handler_t) (ble_nus_t * p_nus, uint8_t * data, uint16_t length);
+typedef void (*ble_nus_data_cb_t) (ble_nus_t * p_nus, uint8_t * data, uint16_t length, void* p_payload);
+typedef struct{
+	ble_nus_data_cb_t ble_nus_data_cb;
+	void* ble_nus_data_cb_payload;
+}ble_nus_data_handler_t;
 
 /**@brief   Nordic UART Service init structure.
  *

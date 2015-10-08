@@ -80,12 +80,13 @@ void ACBLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 
 void ACBLETransceiver::dataReceived(uint8_t * p_data, uint16_t length)
 {
-	typename RingBuffer<uint8_t>::EError loc_err = _rxBuffer.pushElements(length, p_data);
+	uint16_t loc_u16_length = length;
+	typename RingBuffer<uint8_t>::EError loc_err = _rxBuffer.pushElements(loc_u16_length, p_data);
 	if(loc_err != NO_ERROR)
 	{
 		LOG_ERROR("Cannot push elements to ring buffer");
 	}
-	ACBLETransceiver::dataReceived(p_data, length);
+	BLETransceiver::dataReceived(p_data, length);
 }
 
 

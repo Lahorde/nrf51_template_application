@@ -49,7 +49,6 @@ const uint8_t BLETransceiver::SEC_PARAM_MAX_KEY_SIZE             = 16;
 uint16_t  BLETransceiver::u16_connHandle                          = BLE_CONN_HANDLE_INVALID;
 ble_nus_t BLETransceiver::nus;
 ble_gap_sec_params_t             BLETransceiver::secParams;
-BLETransceiver BLETransceiver::instance;
 
 BLETransceiver::BLETransceiver(void):as8_deviceName("ble_transceiver"),
 		b_isAdvertising(false),
@@ -73,11 +72,6 @@ void BLETransceiver::registerListener(IBleTransceiverListener* arg_p_transceiver
 void BLETransceiver::unregisterListener(IBleTransceiverListener* arg_p_transceiverListener)
 {
 	p_transceiverListener = arg_p_transceiverListener;
-}
-
-BLETransceiver* BLETransceiver::getInstance(void)
-{
-	return &instance;
 }
 
 void BLETransceiver::init(const char* arg_as8_deviceName)
@@ -248,7 +242,7 @@ void BLETransceiver::bleStackInit(void)
 	APP_ERROR_CHECK(err_code);
 
 	// Register with the SoftDevice handler module for BLE events.
-	err_code = softdevice_ble_evt_handler_set(bleEvtDispatch);
+	err_code = softdevice_ble_evt_handler_set({(ble_evt_cb_t)&bleEvtDispatch, (void*) this});
 	APP_ERROR_CHECK(err_code);
 
 	// Register with the SoftDevice handler module for BLE events.
@@ -308,7 +302,8 @@ void BLETransceiver::servicesInit(void)
 
 	memset(&nus_init, 0, sizeof(nus_init));
 
-	nus_init.data_handler = onBLERX;
+	nus_init.data_handler.ble_nus_data_cb = (ble_nus_data_cb_t)&onBLERX;
+	nus_init.data_handler.ble_nus_data_cb_payload = (void*)this;
 
 	/** initialize UART service */
 	err_code = ble_nus_init(&nus, &nus_init);
@@ -339,11 +334,12 @@ void BLETransceiver::gapParamsInit(void)
 	APP_ERROR_CHECK(err_code);
 }
 
-void BLETransceiver::bleEvtDispatch(ble_evt_t * p_ble_evt)
+void BLETransceiver::bleEvtDispatch(ble_evt_t * p_ble_evt, BLETransceiver* me)
 {
+	ASSERT(me != NULL);
 	ble_conn_params_on_ble_evt(p_ble_evt);
 	ble_nus_on_ble_evt(&nus, p_ble_evt);
-	getInstance()->onBleEvt(p_ble_evt);
+	me->onBleEvt(p_ble_evt);
 }
 
 void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
@@ -359,18 +355,18 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 	case BLE_GAP_EVT_CONNECTED:
 		//RP - 14/01/2015 - notify
 		u16_connHandle = p_ble_evt->evt.gap_evt.conn_handle;
-		getInstance()->b_isAdvertising = false;
-		if(getInstance()->p_transceiverListener)
+		b_isAdvertising = false;
+		if(p_transceiverListener)
 		{
-			getInstance()->p_transceiverListener->onConnection();
+			p_transceiverListener->onConnection();
 		}
 		break;
 
 	case BLE_GAP_EVT_DISCONNECTED:
 		u16_connHandle = BLE_CONN_HANDLE_INVALID;
-		if(getInstance()->p_transceiverListener)
+		if(p_transceiverListener)
 		{
-			getInstance()->p_transceiverListener->onDisconnection();
+			p_transceiverListener->onDisconnection();
 		}
 		break;
 
@@ -424,9 +420,9 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 		break;
 
 	case BLE_GAP_EVT_RSSI_CHANGED:
-		if(getInstance()->p_transceiverListener)
+		if(p_transceiverListener)
 		{
-			getInstance()->p_transceiverListener->onRSSIChange(p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
+			p_transceiverListener->onRSSIChange(p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
 		}
 		break;
 
@@ -438,9 +434,9 @@ void BLETransceiver::onBleEvt(ble_evt_t * p_ble_evt)
 
 void BLETransceiver::dataReceived(uint8_t * p_data, uint16_t length)
 {
-	if(getInstance()->p_transceiverListener)
+	if(p_transceiverListener)
 	{
-		getInstance()->p_transceiverListener->onDataReceived(length, p_data);
+		p_transceiverListener->onDataReceived(length, p_data);
 	}
 }
 
@@ -466,10 +462,10 @@ void BLETransceiver::onConnParamsEvt(ble_conn_params_evt_t * p_evt)
 	}
 }
 
-void BLETransceiver::onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
+inline void BLETransceiver::onBLERX(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length, BLETransceiver* me)
 {
-	/** data handled in non static method */
-	getInstance()->dataReceived(p_data, length);
+	ASSERT(me != NULL);
+	me->dataReceived(p_data, length);
 }
 
 void BLETransceiver::connParamsErrorHandler(uint32_t nrf_error)

@@ -76,7 +76,8 @@ template <class T>
 typename RingBuffer<T>::EError RingBuffer<T>::pushElements(uint16_t& arg_u16_nbElems, T arg_a_val[])
 {
 	assert(arg_u16_nbElems <=  _u16_bufferSize);
-	for(uint32_t i; i < arg_u16_nbElems; i++)
+	const uint16_t loc_cu16_nbElemsToPush = arg_u16_nbElems;
+	for(uint32_t i = 0; i < loc_cu16_nbElemsToPush; i++)
 	{
 		if(pushElement(arg_a_val[i]) < 0)
 		{
@@ -107,8 +108,8 @@ typename RingBuffer<T>::EError RingBuffer<T>::popElement(T& arg_val)
 template <class T>
 typename RingBuffer<T>::EError RingBuffer<T>::popElements(uint16_t& arg_u16_nbElems, T arg_a_val[])
 {
-	uint16_t loc_u16_nbElemsToPop = arg_u16_nbElems;
-	for(uint16_t i; i < loc_u16_nbElemsToPop; i++)
+	const uint16_t loc_cu16_nbElemsToPop = arg_u16_nbElems;
+	for(uint16_t i = 0; i < loc_cu16_nbElemsToPop; i++)
 	{
 		if(popElement(arg_a_val[i]) < 0)
 		{

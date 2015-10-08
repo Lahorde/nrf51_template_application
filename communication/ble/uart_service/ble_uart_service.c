@@ -107,10 +107,10 @@ static void on_write(ble_nus_t * p_nus, ble_evt_t * p_ble_evt)
     else if (
              (p_evt_write->handle == p_nus->tx_handles.value_handle)
              &&
-             (p_nus->data_handler != NULL)
+             (p_nus->data_handler.ble_nus_data_cb != NULL)
             )
     {
-        p_nus->data_handler(p_nus, p_evt_write->data, p_evt_write->len);
+        p_nus->data_handler.ble_nus_data_cb(p_nus, p_evt_write->data, p_evt_write->len, p_nus->data_handler.ble_nus_data_cb_payload);
     }
     else
     {

@@ -21,21 +21,36 @@
  ********************************/
 
 /**< Value of the RTC1 PRESCALER register. No prescaling => 1 tick = 1/32768Hz = 30.517us*/
-const uint32_t APP_TIMER_PRESCALER         = 0;
+#ifndef APP_TIMER_PRESCALER
+#define APP_TIMER_PRESCALER  (0U)
+#endif
+
 /**< Maximum number of simultaneously created timers. */
-const uint8_t APP_TIMER_MAX_TIMERS         = 4;
+#ifndef APP_TIMER_MAX_TIMERS
+#define APP_TIMER_MAX_TIMERS (4U)
+#endif
+
 /**< Size of timer operation queues. */
-const uint8_t APP_TIMER_OP_QUEUE_SIZE      = 4;
+#ifndef APP_TIMER_OP_QUEUE_SIZE
+#define APP_TIMER_OP_QUEUE_SIZE (4U)
+#endif
 
 /************************************
  *    Application scheduling        *
  ************************************/
 /**< Application uses event scheduler. */
-const bool USE_EVENT_SCHEDULER              = true;
+#ifndef USE_EVENT_SCHEDULER
+#define USE_EVENT_SCHEDULER true
+#endif
 
 /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
-const uint16_t SCHED_MAX_EVENT_DATA_SIZE    = 0x08;
-const uint16_t SCHEDULER_QUEUE_SIZE         = 0x10;
+#ifndef SCHED_MAX_EVENT_DATA_SIZE
+#define SCHED_MAX_EVENT_DATA_SIZE (0x08U)
+#endif
+
+#ifndef SCHEDULER_QUEUE_SIZE
+#define SCHEDULER_QUEUE_SIZE (0x10U)
+#endif
 
 /************************************
  *    Application wireless comm     *

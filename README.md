@@ -53,8 +53,14 @@ Eclipse CDT with GNU ARM plugin http://sourceforge.net/projects/gnuarmeclipse/
     * JLINK_DEBUGGER_PATH pointing to JLinkGDBServer folder
     
 #### Others
-Softdevice flashed on target : refer https://github.com/mrquincle/bluenet
 
+ * Softdevice must be flashed on target (for details refer https://github.com/mrquincle/bluenet )
+ * modify ./CMakeBuild.config according to your setup 
+
+```
+cd scripts
+./softdevice.sh upload
+```
 
 #### Application configuration
  * Event queue
@@ -68,3 +74,6 @@ script pour stlink
 button en subtree
 ajout ITransceiver
 gérer reconnection
+
+### refs
+http://stackoverflow.com/questions/14588091/allocating-c-classes-in-static-memory-with-gcc

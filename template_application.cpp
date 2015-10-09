@@ -16,7 +16,7 @@
  * Include Files
  **************************************************************************/
 #include "Arduino.h"
-#include "ble_transceiver.h"
+#include "ac_ble_transceiver.h"
 #include "logger.h"
 #include "nrf51_status.h"
 #include "assert.h"
@@ -67,6 +67,7 @@ Timer ledTimer(&ledActivator);
 static BtListener btListener;
 static int8_t rssi = UNKNOWN_RSSI;
 static bool ledOn = false;
+BLETransceiver bleTransceiver;
 /**************************************************************************
  * Macros
  **************************************************************************/
@@ -74,8 +75,6 @@ static bool ledOn = false;
 /**************************************************************************
  * Global Functions
  **************************************************************************/
-
-extern uint32_t __etext;
 
 void application_setup(void){
 	BLETransceiver::Error loc_error;
@@ -92,13 +91,13 @@ void application_setup(void){
 	 EventManager::getInstance();
 
 	/** Transceiver must be initialized before other application peripherals */
-	BLETransceiver::getInstance()->init(as8_bleName);
+	 bleTransceiver.init(as8_bleName);
 
 	 /** Add led */
 	pinMode(LED_1_OUTPUT_PIN, OUTPUT);
 
-	BLETransceiver::getInstance()->registerListener(&btListener);
-	loc_error = BLETransceiver::getInstance()->advertise();
+	bleTransceiver.registerListener(&btListener);
+	loc_error = bleTransceiver.advertise();
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_ERROR("Error %d when launching advertisement", loc_error);
 	}
@@ -121,7 +120,7 @@ void application_setup(void){
 void sendLedStatus(bool arg_b_on)
 {
 	uint8_t loc_u8_dataSize = sizeof(bool);
-	BLETransceiver::Error loc_error = BLETransceiver::getInstance()->send(loc_u8_dataSize, (uint8_t*) &arg_b_on);
+	BLETransceiver::Error loc_error = bleTransceiver.send(loc_u8_dataSize, (uint8_t*) &arg_b_on);
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_INFO_LN("Led status could not be sent, error : %d ", loc_error);
 	}
@@ -136,7 +135,7 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 	{
 		ledOn = !ledOn;
 		digitalWrite(LED_1_OUTPUT_PIN, ledOn);
-		if(BLETransceiver::getInstance()->isConnected())
+		if(bleTransceiver.isConnected())
 		{
 			sendLedStatus(ledOn);
 		}
@@ -144,10 +143,10 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 	else if(eventCode == BUTTON_MEDIUM_PRESS)
 	{
 		LOG_INFO_LN("Button medium press");
-		if(BLETransceiver::getInstance()->isConnected())
+		if(bleTransceiver.isConnected())
 		{
 			LOG_INFO_LN("disconnect peripheral");
-			loc_error = BLETransceiver::getInstance()->disconnect();
+			loc_error = bleTransceiver.disconnect();
 			if(loc_error != BLETransceiver::NO_ERROR){
 				LOG_ERROR("Error %d when disconnection peripheral", loc_error);
 				return;
@@ -155,10 +154,10 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 		}
 		else
 		{
-			if(BLETransceiver::getInstance()->isAdvertising())
+			if(bleTransceiver.isAdvertising())
 			{
 				LOG_INFO_LN("stop advertisement");
-				loc_error = BLETransceiver::getInstance()->stopAdvertisement();
+				loc_error = bleTransceiver.stopAdvertisement();
 				if(loc_error != BLETransceiver::NO_ERROR){
 					LOG_ERROR("Error %d when stopping advertisement", loc_error);
 					return;
@@ -167,7 +166,7 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 			else
 			{
 				LOG_INFO_LN("start advertisement");
-				loc_error = BLETransceiver::getInstance()->advertise();
+				loc_error = bleTransceiver.advertise();
 				if(loc_error != BLETransceiver::NO_ERROR){
 					LOG_ERROR("Error %d when launching advertisement", loc_error);
 				}
@@ -186,7 +185,7 @@ void LedActivator::processEvent(uint8_t eventCode, int eventParam){
 
 void LedActivator::timerElapsed(void)
 {
-	if(BLETransceiver::getInstance()->isAdvertising()){
+	if(bleTransceiver.isAdvertising()){
 		/** blink led */
 		ledOn = !ledOn;
 		digitalWrite(LED_1_OUTPUT_PIN, ledOn);
@@ -208,7 +207,7 @@ void BtListener::onConnection(void)
 	ledTimer.cancel();
 	ledOn = 0;
 	digitalWrite(LED_1_OUTPUT_PIN, ledOn);
-	BLETransceiver::getInstance()->startRSSIMeasure();
+	bleTransceiver.startRSSIMeasure();
 }
 
 void BtListener::onDisconnection(void)
@@ -218,10 +217,10 @@ void BtListener::onDisconnection(void)
 	LOG_INFO_LN("peripheral disconnected");
 	ledOn = 0;
 	digitalWrite(LED_1_OUTPUT_PIN, ledOn);
-	BLETransceiver::getInstance()->stopRSSIMeasure();
+	bleTransceiver.stopRSSIMeasure();
 	rssi = UNKNOWN_RSSI;
 
-	loc_error = BLETransceiver::getInstance()->advertise();
+	loc_error = bleTransceiver.advertise();
 	if(loc_error != BLETransceiver::NO_ERROR){
 		LOG_ERROR("Error %d when launching advertisement", loc_error);
 	}

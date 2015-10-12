@@ -52,6 +52,24 @@
 #define SCHEDULER_QUEUE_SIZE (0x10U)
 #endif
 
+/*****************************************
+ *    Application persistent storage     *
+ *****************************************/
+
+/**
+ * pstorage use - handles persistent memory -
+ * refer  https://devzone.nordicsemi.com/documentation/nrf51/6.0.0/s110/html/a00018.html
+ */
+#ifndef USE_PSTORAGE
+#define USE_PSTORAGE false
+#endif
+/**
+ * direct soft device flash writes
+ */
+#ifndef USE_PDIRECT_SDSTORAGE
+#define USE_PDIRECT_SDSTORAGE true
+#endif
+
 /************************************
  *    Application wireless comm     *
  ************************************/

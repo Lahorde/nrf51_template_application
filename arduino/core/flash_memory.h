@@ -26,10 +26,22 @@
 class FlashMemory
 {
 public:
+	static const int8_t NO_ERROR = 0;
+	static const int8_t BUSY = NO_ERROR -1;
+	static const int8_t INVALID_ADDRESS = BUSY + 1 ;
+	static const int8_t WRITE_ERROR = INVALID_ADDRESS - 1;
+	static const int8_t ERASE_ERROR = WRITE_ERROR - 1;
+public:
+	FlashMemory(void);
 	int8_t readLong(int, int32_t&);
 	int8_t read(int, int8_t&);
 	int8_t write(int, uint8_t);
 	int8_t writeLong(int, int32_t);
+	int8_t erasePage(int);
+	void flash_handler(uint32_t sys_evt);
+private:
+	bool _b_pendingOperation;
+	int8_t _s8_writeStatus;
 };
 
 extern FlashMemory FlashMem;

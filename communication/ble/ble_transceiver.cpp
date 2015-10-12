@@ -33,8 +33,8 @@ const uint32_t BLETransceiver::FIRST_CONN_PARAMS_UPDATE_DELAY   = APP_TIMER_TICK
 const uint32_t BLETransceiver::NEXT_CONN_PARAMS_UPDATE_DELAY    = APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER);
 const uint8_t BLETransceiver::MAX_CONN_PARAMS_UPDATE_COUNT      = 3;
 
-const uint16_t BLETransceiver::u16_maxConnInterval                = MSEC_TO_UNITS(100, UNIT_1_25_MS);
-const uint16_t BLETransceiver::u16_minConnInterval                = MSEC_TO_UNITS(200, UNIT_1_25_MS);
+const uint16_t BLETransceiver::u16_minConnInterval                = MSEC_TO_UNITS(100, UNIT_1_25_MS);
+const uint16_t BLETransceiver::u16_maxConnInterval                = MSEC_TO_UNITS(200, UNIT_1_25_MS);
 const uint16_t BLETransceiver::SLAVE_LATENCY                    = 0;
 const uint16_t BLETransceiver::CONN_SUP_TIMEOUT                 = MSEC_TO_UNITS(4000, UNIT_10_MS);
 
@@ -325,8 +325,8 @@ void BLETransceiver::gapParamsInit(void)
 
 	memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 
-	gap_conn_params.min_conn_interval = u16_maxConnInterval;
-	gap_conn_params.max_conn_interval = u16_minConnInterval;
+	gap_conn_params.min_conn_interval = u16_minConnInterval;
+	gap_conn_params.max_conn_interval = u16_maxConnInterval;
 	gap_conn_params.slave_latency     = SLAVE_LATENCY;
 	gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
 
@@ -475,6 +475,13 @@ void BLETransceiver::connParamsErrorHandler(uint32_t nrf_error)
 
 void BLETransceiver::sysEvtDispatch(uint32_t sys_evt)
 {
-	pstorage_sys_event_handler(sys_evt);
+	if(USE_PSTORAGE)
+	{
+		pstorage_sys_event_handler(sys_evt);
+	}
+	else if(USE_PDIRECT_SDSTORAGE)
+	{
+		sd_flash_handler(sys_evt);
+	}
 }
 

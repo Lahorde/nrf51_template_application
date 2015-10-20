@@ -94,6 +94,11 @@ void Timer::init(void)
 
 void Timer::timerElapsed(Timer * arg_p_timer)
 {
+	/** Flush timer events when it isn't active anymore */
+	if(!arg_p_timer->isActive()){
+		return;
+	}
+
 	if(!arg_p_timer->_b_periodicTimer){
 		arg_p_timer->cancel();
 	}

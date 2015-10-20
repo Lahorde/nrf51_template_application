@@ -88,6 +88,7 @@ private :
 	const char* as8_deviceName;
 
 	bool b_isAdvertising;
+	bool b_isInitalized;
 
 	/** 1 single listener handled */
 	IBleTransceiverListener* p_transceiverListener;
@@ -104,9 +105,18 @@ public:
 	void init(const char* arg_as8_deviceName);
 
 	/**
-	 * Start BLE advertisement
+	 * Checks if transceiver has been initialized
+	 * @return
 	 */
-	Error advertise(void);
+	bool isInitialized(void);
+
+	/**
+	 * Start BLE advertisement during given duration.
+	 * Default mode set to unlimited discover.
+	 * @param arg_u16_advDuration - duration between 0 and 180s.
+	 * @return
+	 */
+	Error advertise(uint16_t arg_u16_advDuration = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED);
 
 	/**
 	 * Stop BLE advertisement
@@ -174,6 +184,13 @@ protected:
 	virtual void dataReceived(uint8_t * p_data, uint16_t length);
 
 private :
+
+	/** Initialize transceiver, after this call,
+	 * a connection can be established by calling
+	 * connect()
+	 * @return
+	 */
+	Error init(void);
 
 	/**@brief Function for initializing the BLE stack.
 	 *

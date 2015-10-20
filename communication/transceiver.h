@@ -34,6 +34,19 @@ public:
 public:
 	virtual ~ITransceiver() {};
 
+	/** Initialize transceiver, after this call,
+	 * a connection can be established by calling
+	 * connect()
+	 * @return
+	 */
+	virtual Error init(void) = 0;
+
+	/**
+	 * Checks if transceiver has been initialized
+	 * @return
+	 */
+	virtual bool isInitialized(void) = 0;
+
 	/**
 	 * Connect transceiver
 	 */
@@ -51,7 +64,7 @@ public:
 	virtual Error disconnect(void) = 0;
 
 	/**
-	 * Send given bytes
+	 * Send given bytes. An active connection must be on going.
 	 * @param arg_u16_nb_bytes number of bytes to send
 	 * @param arg_au8_bytes_send bytes to send, updated to number of bytes sent
 	 * @return number of bytes sent
@@ -59,7 +72,7 @@ public:
 	virtual Error send(uint8_t& arg_u8_nb_bytes, uint8_t arg_au8_bytesSend[]) = 0;
 
 	/**
-	 * Receive given number of bytes.
+	 * Receive given number of bytes. An active connection must be on going.
 	 * @param arg_u16_nb_bytes number of received bytes to read, updated to number of bytes
 	 * successfully read
 	 * @param arg_au8_bytes_read bytes received

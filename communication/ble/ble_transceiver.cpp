@@ -26,7 +26,6 @@ extern "C" {
 }
 
 const uint16_t BLETransceiver::u16_appAdvInterval                 = 64;
-const uint16_t BLETransceiver::APP_ADV_TIMEOUT_IN_SECONDS       = 180;
 const uint8_t BLETransceiver::IS_SRVC_CHANGED_CHARACT_PRESENT   = 0;
 
 const uint32_t BLETransceiver::FIRST_CONN_PARAMS_UPDATE_DELAY   = APP_TIMER_TICKS(20000, APP_TIMER_PRESCALER);
@@ -50,8 +49,16 @@ uint16_t  BLETransceiver::u16_connHandle                          = BLE_CONN_HAN
 ble_nus_t BLETransceiver::nus;
 ble_gap_sec_params_t             BLETransceiver::secParams;
 
+#ifdef USE_PDIRECT_SDSTORAGE
+/**
+ * sd_flash direct handler
+ */
+extern void sd_flash_handler(uint32_t sys_evt);
+#endif
+
 BLETransceiver::BLETransceiver(void):as8_deviceName("ble_transceiver"),
 		b_isAdvertising(false),
+		b_isInitalized(false),
 		p_transceiverListener(NULL)
 {
 }
@@ -63,6 +70,7 @@ BLETransceiver::~BLETransceiver()
 		unregisterListener(p_transceiverListener);
 	}
 	b_isAdvertising = false;
+	b_isInitalized = false;
 }
 
 void BLETransceiver::registerListener(IBleTransceiverListener* arg_p_transceiverListener)
@@ -77,15 +85,33 @@ void BLETransceiver::unregisterListener(IBleTransceiverListener* arg_p_transceiv
 void BLETransceiver::init(const char* arg_as8_deviceName)
 {
 	as8_deviceName = arg_as8_deviceName;
+	init();
+}
+
+/** Initialize transceiver, after this call,
+ * a connection can be established by calling
+ * connect()
+ * @return
+ */
+BLETransceiver::Error BLETransceiver::init(void)
+{
 	bleStackInit();
 	gapParamsInit();
 	servicesInit();
 	advertisingInit();
 	connParamsInit();
 	secParamsInit();
+	b_isInitalized = true;
+
+	return NO_ERROR;
 }
 
-BLETransceiver::Error BLETransceiver::advertise(void)
+bool BLETransceiver::isInitialized(void)
+{
+	return b_isInitalized;
+}
+
+BLETransceiver::Error BLETransceiver::advertise(uint16_t arg_u16_advDuration)
 {
 	uint32_t             err_code;
 	ble_gap_adv_params_t adv_params;
@@ -98,7 +124,7 @@ BLETransceiver::Error BLETransceiver::advertise(void)
 	adv_params.p_peer_addr = NULL;
 	adv_params.fp          = BLE_GAP_ADV_FP_ANY;
 	adv_params.interval    = u16_appAdvInterval;
-	adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
+	adv_params.timeout     = arg_u16_advDuration;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	if(err_code != NRF_SUCCESS)
@@ -255,7 +281,7 @@ void BLETransceiver::advertisingInit(void)
 	uint32_t      err_code;
 	ble_advdata_t advdata;
 	ble_advdata_t scanrsp;
-	uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+	uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
 	ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE, nus.uuid_type}};
 

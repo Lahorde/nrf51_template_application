@@ -44,6 +44,15 @@ void RTC1_IRQHandler(void)
 
 ### JLink GDB debugger
  * GDB server can be found here https://www.segger.com/jlink-software.html
+ * GOT some disconnections on linux
+ 
+### STLink - openocd
+ * details here : https://github.com/RIOT-OS/RIOT/wiki/Board:-yunjia-nrf51822
+ * for code uploading refer ./scripts/openocd/open_ocd_upload_application.sh - http://openocd.org/doc/html/Flash-Programming.html
+ * to debug : http://openocd.org/doc/html/GDB-and-OpenOCD.html
+   * in eclipse : http://gnuarmeclipse.github.io/debug/openocd/#create-the-debugger-configuration
+
+More info here : https://www.besttechnology.co.jp/modules/knowledge/gate.php/openocd.pdf?way=attach&_noumb&refer=OpenOCD&openfile=openocd.pdf
 
 #### Eclipse
 Eclipse CDT with GNU ARM plugin http://sourceforge.net/projects/gnuarmeclipse/

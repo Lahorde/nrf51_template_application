@@ -40,7 +40,8 @@ void RTC1_IRQHandler(void)
 		// Check for expired timers
 		timer_timeouts_check();
 	}
-}```
+}
+```
 
 ### JLink GDB debugger
  * GDB server can be found here https://www.segger.com/jlink-software.html

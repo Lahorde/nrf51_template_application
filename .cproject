@@ -3,6 +3,12 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032" moduleId="org.eclipse.cdt.core.settings" name="debug_rfduino_upload_jlink">
+				<macros>
+					<stringMacro name="NRF51_SDK_PATH" type="VALUE_TEXT" value="/opt/nrf51_sdk/nrf51822"/>
+					<stringMacro name="APPLICATION_START_ADDRESS" type="VALUE_TEXT" value="0x00016000"/>
+					<stringMacro name="APPLICATION_LENGTH" type="VALUE_TEXT" value="0x2a000"/>
+					<stringMacro name="JLINK_DEBUGGER_PATH" type="VALUE_TEXT" value="/home/data/remi/dev_tools/Embedded/JLink_Linux_V500a_x86_64/JLinkExe"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -287,6 +293,12 @@
 		</cconfiguration>
 		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.1567280683">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.1567280683" moduleId="org.eclipse.cdt.core.settings" name="debug_rfduino_upload_stlink">
+				<macros>
+					<stringMacro name="NRF51_SDK_PATH" type="VALUE_TEXT" value="/opt/nrf51_sdk/nrf51822"/>
+					<stringMacro name="APPLICATION_START_ADDRESS" type="VALUE_TEXT" value="0x00016000"/>
+					<stringMacro name="APPLICATION_LENGTH" type="VALUE_TEXT" value="0x2a000"/>
+					<stringMacro name="JLINK_DEBUGGER_PATH" type="VALUE_TEXT" value="/home/data/remi/dev_tools/Embedded/JLink_Linux_V500a_x86_64/JLinkExe"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -571,6 +583,12 @@
 		</cconfiguration>
 		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.984384777">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.757167704.16683032.984384777" moduleId="org.eclipse.cdt.core.settings" name="debug_rfduino">
+				<macros>
+					<stringMacro name="NRF51_SDK_PATH" type="VALUE_TEXT" value="/opt/nrf51_sdk/nrf51822"/>
+					<stringMacro name="APPLICATION_START_ADDRESS" type="VALUE_TEXT" value="0x00016000"/>
+					<stringMacro name="JLINK_DEBUGGER_PATH" type="VALUE_TEXT" value="/home/data/remi/dev_tools/Embedded/JLink_Linux_V500a_x86_64/JLinkExe"/>
+					<stringMacro name="APPLICATION_LENGTH" type="VALUE_TEXT" value="0x2a000"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>

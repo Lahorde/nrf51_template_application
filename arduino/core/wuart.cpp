@@ -74,16 +74,7 @@ function :
 **********************************************************************/
 void UART0_Start(uint32_t BaudRate, uint32_t rx_pin, uint32_t tx_pin )
 {
-	if( UART0_State != UART0_NotStart )
-	{
-		return;
-	}
-	
-    NRF_GPIO->PIN_CNF[tx_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
-                                   | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-                                   | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos)
-                                   | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-                                   | (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
+	UART0_StartTx(BaudRate, tx_pin);
 											
 	NRF_GPIO->PIN_CNF[rx_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
 									| (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
@@ -91,11 +82,38 @@ void UART0_Start(uint32_t BaudRate, uint32_t rx_pin, uint32_t tx_pin )
                                     | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
                                     | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);		
 
-	NRF_UART0->PSELTXD = tx_pin;	
 	NRF_UART0->PSELRXD = rx_pin;
+	
+	NRF_UART0->TASKS_STARTRX    = 1;
+	NRF_UART0->EVENTS_RXDRDY    = 0;
+	
+	NRF_UART0->INTENCLR = 0xffffffffUL;
+	NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
+	NVIC_SetPriority(UART0_IRQn, 3);
+	
+	IntController_linkInterrupt( UART0_IRQn, UART0_handler);
+    NVIC_EnableIRQ(UART0_IRQn);
+	
+	UART0_State = UART0_BeforeFirstTX;
+}
+
+void UART0_StartTx(uint32_t BaudRate, uint32_t tx_pin )
+{
+	if( UART0_State != UART0_NotStart )
+	{
+		return;
+	}
+
+    NRF_GPIO->PIN_CNF[tx_pin] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
+                                   | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+                                   | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos)
+                                   | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+                                   | (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
+
+	NRF_UART0->PSELTXD = tx_pin;
 	NRF_UART0->PSELRTS = 0xFFFFFFFF;
     NRF_UART0->PSELCTS = 0xFFFFFFFF;
-	
+
 	uint32_t baud;
 	switch(BaudRate)
 	{
@@ -114,25 +132,18 @@ void UART0_Start(uint32_t BaudRate, uint32_t rx_pin, uint32_t tx_pin )
 		case 250000: baud = UART_BAUDRATE_BAUDRATE_Baud250000; break;
 		case 460800: baud = UART_BAUDRATE_BAUDRATE_Baud460800; break;
 		case 921600: baud = UART_BAUDRATE_BAUDRATE_Baud921600; break;
-		case 1000000: baud = UART_BAUDRATE_BAUDRATE_Baud1M; break;			
+		case 1000000: baud = UART_BAUDRATE_BAUDRATE_Baud1M; break;
 		default: baud = UART_BAUDRATE_BAUDRATE_Baud115200;break;
 	}
-	
+
 	NRF_UART0->BAUDRATE         = (baud << UART_BAUDRATE_BAUDRATE_Pos);
 	NRF_UART0->ENABLE           = (UART_ENABLE_ENABLE_Enabled << UART_ENABLE_ENABLE_Pos);
 	NRF_UART0->TASKS_STARTTX    = 1;
-	NRF_UART0->TASKS_STARTRX    = 1;
-	NRF_UART0->EVENTS_RXDRDY    = 0;
-	
-	NRF_UART0->INTENCLR = 0xffffffffUL;
-	NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
-	NVIC_SetPriority(UART0_IRQn, 3);
-	
-	IntController_linkInterrupt( UART0_IRQn, UART0_handler);
-    NVIC_EnableIRQ(UART0_IRQn);
-	
+
 	UART0_State = UART0_BeforeFirstTX;
 }
+
+
 /**********************************************************************
 name :
 function : 

@@ -96,7 +96,7 @@ int8_t FlashMemory::write(int address, uint8_t value)
 	return (_s8_writeStatus == NO_ERROR) ? sizeof(value) : WRITE_ERROR;
 }
 
-int8_t FlashMemory::erasePage(int pageNumber)
+FlashMemory::EError FlashMemory::erasePage(int pageNumber)
 {
 	uint32_t err_code = NRF_SUCCESS;
 

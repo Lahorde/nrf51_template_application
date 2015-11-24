@@ -7,8 +7,6 @@
 extern "C" {
 #endif
 
-
-#define ADC_RESOLUTION        10
 #define PWM_RESOLUTION        16
 
 #define WRITE_CURRENT_RESOLUTION    8

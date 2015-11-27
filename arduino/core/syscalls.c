@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <assert.h>
 #include "wuart.h"
 #if defined (  __GNUC__  ) /* GCC CS3 */
   #include <sys/types.h>
@@ -65,7 +66,12 @@ extern caddr_t _sbrk ( int incr )
     if (heap == 0) heap = (char*)&__HeapBase;
     void* ret = heap;
     if (heap + incr >= (char*)&__HeapLimit)
+    {
         ret = (void*)-1;
+        /** be sure to never be here... - if here : check dynamic allocations and eventually
+         * increase heap size*/
+        assert(false);
+    }
     else
         heap += incr;
     return ret;

@@ -137,6 +137,8 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.1267059633" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.483756852" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nrf51822_sdk_modified_files/Include/sd_common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/AltSoftSerial}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/ring_buffer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NRF51_SDK_PATH}/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/persistent_object}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/communication}&quot;"/>
@@ -427,6 +429,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.1041395094" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1129136517" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nrf51822_sdk_modified_files/Include/sd_common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/AltSoftSerial}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/ring_buffer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NRF51_SDK_PATH}/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/persistent_object}&quot;"/>
@@ -642,7 +645,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.flags.510477664" name="Assembler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.flags"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.other.1517842934" name="Other assembler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.other" value="-nostdlib --param max-inline-insns-single=500 " valueType="string"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.1366224880" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="__HEAP_SIZE=256"/>
+									<listOptionValue builtIn="false" value="__HEAP_SIZE=432"/>
 									<listOptionValue builtIn="false" value="__STACK_SIZE=2048"/>
 									<listOptionValue builtIn="false" value="ARDUINO=157"/>
 									<listOptionValue builtIn="false" value="NRF51"/>
@@ -718,6 +721,9 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.1575868775" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.2045106400" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nrf51822_sdk_modified_files/Include/sd_common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/timeslot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/AltSoftSerial}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/ring_buffer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NRF51_SDK_PATH}/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libraries/arduino_libraries/persistent_object}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/communication}&quot;"/>

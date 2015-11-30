@@ -27,10 +27,8 @@
 #include "pinout.h"
 #include "flash_memory.h"
 #include "persistent_object.h"
+#include "AltSoftSerial.h"
 
-extern "C"{
-#include "ble_flash.h"
-}
 
 /**************************************************************************
  * Manifest Constants
@@ -79,19 +77,22 @@ BLETransceiver bleTransceiver;
 void application_setup(void){
 	BLETransceiver::Error loc_error;
 
-	Serial.begin(9600);
-	LOG_INIT(LOG_LEVEL);
+
+
+	/** Transceiver must be initialized before other application peripherals */
+	 bleTransceiver.init(as8_bleName);
+	 AltSoftSerial::SoftSerial.begin(9600, 6);
+	LOG_INIT_STREAM(LOG_LEVEL, &AltSoftSerial::SoftSerial);
+
 	LOG_INFO_LN("\nStarting application ...");
 	LOG_INFO_LN("min remaining stack = %l", MemoryWatcher::getMinRemainingStack());
 	LOG_INFO_LN("min remaining heap = %l", MemoryWatcher::getMinRemainingHeap());
 	LOG_INFO_LN("remaining stack = %l", MemoryWatcher::getRemainingStack());
 	MemoryWatcher::paintStackNow();
 
+
 	/** Use event manager - instantiate it now */
 	 EventManager::getInstance();
-
-	/** Transceiver must be initialized before other application peripherals */
-	 bleTransceiver.init(as8_bleName);
 
 	 /** Add led */
 	pinMode(LED_1_OUTPUT_PIN, OUTPUT);

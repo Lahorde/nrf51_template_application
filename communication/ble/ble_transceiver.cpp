@@ -23,6 +23,7 @@ extern "C" {
 #include "ble_advdata.h"
 #include "pstorage.h"
 #include "app_timer.h"
+#include "timeslot.h"
 }
 
 const uint16_t BLETransceiver::u16_appAdvInterval                 = 64;
@@ -509,5 +510,6 @@ void BLETransceiver::sysEvtDispatch(uint32_t sys_evt)
 	{
 		sd_flash_handler(sys_evt);
 	}
+	nrf_evt_signal_handler(sys_evt);
 }
 

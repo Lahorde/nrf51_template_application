@@ -38,7 +38,6 @@ private:
 	bool _b_start;
 	bool _b_end;
 public:
-	RingBuffer(void);
 	RingBuffer(uint16_t arg_u16_bufferSize);
 	~RingBuffer();
 

@@ -24,6 +24,7 @@
  * Include Files
  **************************************************************************/
 #include "timeslot.h"
+#include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
@@ -53,6 +54,11 @@ static void (*onTimeslotStartCb)(TsNextAction*) = NULL;
 static void (*onTimer0TimeslotIRQ)(TsNextAction*) = NULL;
 static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
 static bool session_idle = true;
+
+/**************************************************************************
+ * Static Functions declarations
+ **************************************************************************/
+static void scheduleNextTimeslot(const TsNextAction*);
 
 /**************************************************************************
  * Functions definitions
@@ -145,7 +151,6 @@ void nrf_evt_signal_handler(uint32_t evt_id)
     }
 }
 
-
 /**@brief Timeslot event handler
  */
 nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_type)
@@ -153,14 +158,12 @@ nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_type)
     switch(signal_type)
     {
         case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
             if(onTimeslotStartCb)
             {
             	TsNextAction nextAction = {0};
             	onTimeslotStartCb(&nextAction);
-
-            	configure_next_event_normal(nextAction.slot_length);
-            	signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-            	signal_callback_return_param.callback_action = nextAction.callback_action;
+            	scheduleNextTimeslot(&nextAction);
             }
             else
             {
@@ -180,19 +183,15 @@ nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_type)
         	if(onTimer0TimeslotIRQ){
         		TsNextAction nextAction = {0};
         		onTimer0TimeslotIRQ(&nextAction);
-        		configure_next_event_normal(nextAction.slot_length);
-        		signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-        		signal_callback_return_param.callback_action = nextAction.callback_action;
+        		scheduleNextTimeslot(&nextAction);
             }
             break;
-        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
-            //No implementation needed
-            break;
+
         case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED:
             //Try scheduling a new timeslot
             configure_next_event_earliest(m_slot_length);
-            signal_callback_return_param.params.request.p_next = &m_timeslot_request;
             signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+            signal_callback_return_param.params.request.p_next = &m_timeslot_request;
             break;
         default:
             //No implementation needed
@@ -232,6 +231,40 @@ void register_timer0_timeslot_IRQ(void (*arg_pf_onTimer0TimeslotIRQ)(TsNextActio
 		APP_ERROR_CHECK_BOOL(false);
 	}
 	onTimer0TimeslotIRQ = arg_pf_onTimer0TimeslotIRQ;
+}
+
+void scheduleNextTimeslot(const TsNextAction* arg_p_nexAction)
+{
+	signal_callback_return_param.callback_action = arg_p_nexAction->callback_action;
+	if(arg_p_nexAction->callback_action == NRF_RADIO_SIGNAL_CALLBACK_ACTION_EXTEND)
+	{
+		signal_callback_return_param.params.extend.length_us = arg_p_nexAction->extension.slot_length;
+	}
+	else if(arg_p_nexAction->callback_action == NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE
+			|| arg_p_nexAction->callback_action == NRF_RADIO_SIGNAL_CALLBACK_ACTION_END)
+	{
+		signal_callback_return_param.params.request.p_next = NULL;
+	}
+	else if(arg_p_nexAction->callback_action == NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END)
+	{
+		if(arg_p_nexAction->next_timeslot.request_type == NRF_RADIO_REQ_TYPE_EARLIEST)
+		{
+			configure_next_event_earliest(arg_p_nexAction->next_timeslot.slot_length);
+		}
+		else if(arg_p_nexAction->next_timeslot.request_type == NRF_RADIO_REQ_TYPE_NORMAL)
+		{
+			configure_next_event_normal(arg_p_nexAction->next_timeslot.slot_length);
+		}
+		else
+		{
+			assert(false);
+		}
+		signal_callback_return_param.params.request.p_next = &m_timeslot_request;
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 

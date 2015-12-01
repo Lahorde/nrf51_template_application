@@ -40,9 +40,20 @@
  * Type Definitions
  **************************************************************************/
 typedef struct{
-	uint32_t slot_length;
-	uint8_t request_type;     /**< Type of request, see @ref NRF_RADIO_REQUEST_TYPE. */
+
 	uint8_t callback_action;  /**< The action requested by the application when returning from the signal callback, see @ref NRF_RADIO_SIGNAL_CALLBACK_ACTION. */
+	union
+	{
+		struct
+		{
+			uint32_t slot_length;     /** timeslot extension */
+		} extension;
+		struct
+		{
+			uint8_t request_type;     /**< Type of request, see @ref NRF_RADIO_REQUEST_TYPE. */
+			uint32_t slot_length;     /** timeslot extension */
+		} next_timeslot;
+	};
 }TsNextAction;
 /**************************************************************************
  * Variables
